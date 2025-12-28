@@ -1,0 +1,16 @@
+{
+  "name": "wujieaichat-desktop",
+  "version": "1.0.0",
+  "description": "无界AI聊天的桌面版应用",
+  "license": "UNLICENSED",
+  "author": "BlackHoleEraTeam",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "electron": "^39.2.7"
+  }
+}
