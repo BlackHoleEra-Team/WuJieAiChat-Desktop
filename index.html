@@ -1,20 +1,177 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <title>Hello from Electron renderer!</title>
-  </head>
-  <body>
-    <h1>Hello from Electron renderer!</h1>
-    <p>👋</p>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; img-src 'self' blob: data:"
+  />
+  <meta
+    http-equiv="X-Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; img-src 'self' blob: data:"
+  />
+  <title>无界AI聊天</title>
+  <link rel="stylesheet" href="./css/index.css" />
+  <!-- 引入 cropper.css -->
+  <link rel="stylesheet" href="./node_modules/cropperjs/dist/cropper.css" />
+</head>
+<body>
+  <div class="title-bar" id="titleBar">
+    <div class="title-bar-content">
+      <div class="title-section">
+        <div class="app-icon">
+          <img src="images/WuJieAiChat.png" alt="应用图标" width="24" height="24" id="appIcon" style="border-radius: 6px;">
+        </div>
+        <div class="app-title">无界AI聊天</div>
+      </div>
+      <div class="window-controls">
+        <button class="window-btn minimize" id="minimizeBtn" title="最小化">
+          <svg width="12" height="12" viewBox="0 0 12 12">
+            <rect x="1" y="6" width="10" height="1" fill="currentColor"/>
+          </svg>
+        </button>
+        <button class="window-btn maximize" id="maximizeBtn" title="最大化">
+          <svg width="12" height="12" viewBox="0 0 12 12">
+            <rect x="1" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1"/>
+          </svg>
+        </button>
+        <button class="window-btn close" id="closeBtn" title="关闭">
+          <svg width="12" height="12" viewBox="0 0 12 12">
+            <path d="M2 2 L10 10 M10 2 L2 10" stroke="currentColor" stroke-width="1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="app-container">
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+      <div class="sidebar-content">
+        <!-- 顶部标签页 -->
+        <div class="sidebar-tabs">
+          <button class="sidebar-tab active" data-tab="chat" title="聊天">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+            </svg>
+            <span>聊天</span>
+          </button>
+          <button class="sidebar-tab" data-tab="contacts" title="联系人">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+            <span>联系人</span>
+          </button>
+        </div>
+        
+        <!-- 底部功能区 -->
+        <div class="sidebar-bottom">
+          <button class="sidebar-tab" data-tab="profile" title="我的">
+            <div class="avatar-container">
+              <img src="images/app-icon.png" alt="我的头像" width="24" height="24" style="border-radius: 50%;" id="sidebar-avatar">
+            </div>
+            <span id="sidebar-username">我的</span>
+          </button>
+          <button class="sidebar-tab" data-tab="settings" title="设置">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94 l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+            </svg>
+            <span>设置</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-content">
+      <div class="content-area" id="chat-content">
+        <h1>聊天</h1>
+        <p>欢迎使用无界AI聊天 - 聊天功能</p>
+      </div>
+      <div class="content-area" id="contacts-content" style="display: none;">
+        <h1>联系人</h1>
+        <p>联系人列表将在这里显示</p>
+      </div>
+      <div class="content-area" id="profile-content" style="display: none;">
+        <div class="profile-container">
+          <h1>个人资料</h1>
+          <div class="profile-section">
+            <div class="avatar-upload-section">
+              <div class="current-avatar">
+                <img src="images/app-icon.png" alt="当前头像" id="profile-avatar" width="80" height="80">
+              </div>
+              <div class="avatar-controls">
+                <!-- 使用label包裹文件输入框，确保点击按钮时触发文件选择 -->
+                <label class="btn btn-primary" for="avatar-input">更换头像</label>
+                <input type="file" id="avatar-input" accept="image/*" class="hidden-file-input">
+                <button class="btn btn-secondary" id="remove-avatar-btn">移除头像</button>
+              </div>
+            </div>
+            
+            <div class="username-section">
+              <label for="username-input">用户名：</label>
+              <div class="username-input-group">
+                <input type="text" id="username-input" placeholder="请输入用户名" maxlength="20">
+                <button class="btn btn-primary" id="save-username-btn">保存</button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+
+      <!-- 头像裁剪页面 -->
+      <div class="content-area" id="avatar-crop-content" style="display: none;">
+        <div class="crop-container">
+          <h1>裁剪头像</h1>
+          <div class="crop-section">
+            <div class="crop-main">
+              <!-- 左侧：裁剪区域 -->
+              <div class="crop-left">
+                <div class="upload">
+                  <input type="file" class="upload-file" id="avatar-upload-file" accept="image/*">
+                  <div class="upload-btn">重新选择图片</div>
+                </div>
+
+                <!-- 显示上传的图片并选择裁剪区域 -->
+                <div class="clip-area">
+                  <div class="clip-wrap">
+                    <img src="" class="clip-img" id="clip-img" style="max-width: 100%;">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 右侧：预览和控制区域 -->
+              <div class="crop-right">
+                <!-- 预览头像 -->
+                <div class="preview-section">
+                  <h3>预览</h3>
+                  <div class="preview-container">
+                    <div class="preview-avatar">
+                      <img src="" class="preview-img" id="preview-img" style="display: none;">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 裁剪控制按钮 -->
+                <div class="crop-buttons">
+                  <button class="btn btn-secondary" id="crop-cancel-btn">取消</button>
+                  <button class="btn btn-primary" id="crop-confirm-btn">确认裁剪</button>
+                </div>
+              </div>
+            </div>
+            <canvas id="avatar-canvas" style="display: none;"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="content-area" id="settings-content" style="display: none;">
+        <h1>设置</h1>
+        <p>应用设置将在这里显示</p>
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/titlebar.js"></script>
+</body>
 </html>

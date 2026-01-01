@@ -12,5 +12,16 @@
   },
   "devDependencies": {
     "electron": "^39.2.7"
+  },
+  "build": {
+    "win": {
+      "requestedExecutionLevel": "asInvoker",
+      "dpiAware": false
+    }
+  },
+  "dependencies": {
+    "cropperjs": "^1.6.2",
+    "jquery": "^3.7.1",
+    "jquery-cropper": "^1.0.2"
   }
 }
