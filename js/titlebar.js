@@ -213,36 +213,29 @@ function initSidebarTabs() {
   let currentAnimationTimer = null
   
   function switchTab(targetTab, immediate = false, animationType = 'slide', clickPos = null) {
+    // 首先清理所有动画状态，确保没有残留的动画效果
+    if (currentAnimationTimer) {
+      clearTimeout(currentAnimationTimer)
+      currentAnimationTimer = null
+    }
+    
+    // 清理所有内容区域的动画状态
+    document.querySelectorAll('.content-area').forEach(area => {
+      area.classList.remove('page-fade-in', 'page-slide-right', 'page-slide-left', 'page-zoom-in', 'page-rotate-in', 'page-fly-in')
+      area.style.transform = ''
+      area.style.transformOrigin = ''
+      area.style.transition = ''
+      area.style.opacity = ''
+      area.style.visibility = ''
+    })
+    
     // 获取当前激活的标签页
     const currentActiveTab = document.querySelector('.sidebar-tab.active')
     const currentActiveContent = document.querySelector('.content-area[style*="display: block"]')
     
-    // 检查是否已经在目标标签页
+    // 检查是否已经在目标标签页，如果是则直接返回，不再执行动画
     if (currentActiveTab && currentActiveTab.getAttribute('data-tab') === targetTab) {
-      // 如果是，清理可能存在的动画状态
-      if (currentAnimationTimer) {
-        clearTimeout(currentAnimationTimer)
-        currentAnimationTimer = null
-      }
-      // 清理当前内容区域的动画状态
-      const currentContent = document.getElementById(`${targetTab}-content`)
-      if (currentContent) {
-        // 移除动画类
-        currentContent.classList.remove('page-fade-in', 'page-slide-right', 'page-slide-left', 'page-zoom-in', 'page-rotate-in', 'page-fly-in')
-        // 重置所有样式
-        currentContent.style.transform = ''
-        currentContent.style.transformOrigin = ''
-        currentContent.style.transition = ''
-        currentContent.style.opacity = ''
-        currentContent.style.visibility = ''
-      }
       return
-    }
-    
-    // 中断当前正在执行的动画
-    if (currentAnimationTimer) {
-      clearTimeout(currentAnimationTimer)
-      currentAnimationTimer = null
     }
     
     // 移除所有标签页的激活状态
@@ -358,12 +351,17 @@ function initSidebarTabs() {
     
     // 动画结束后移除动画类和重置样式
     currentAnimationTimer = setTimeout(() => {
+      // 移除动画类
       targetContent.classList.remove(animationClass)
       // 重置所有动画相关样式
       targetContent.style.transform = ''
       targetContent.style.transformOrigin = ''
       // 恢复原始transition值
       targetContent.style.transition = originalTransition
+      // 重置其他可能的动画相关属性
+      targetContent.style.opacity = ''
+      targetContent.style.visibility = ''
+      // 确保动画定时器被清除
       currentAnimationTimer = null
     }, 600) // 等待600ms，与动画持续时间一致
   }
