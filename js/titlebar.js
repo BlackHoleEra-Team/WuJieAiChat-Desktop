@@ -59,17 +59,62 @@ titleBar.addEventListener('dblclick', () => {
 })
 
 // 添加标题栏悬停效果（统一毛玻璃主题）
-titleBar.addEventListener('mouseenter', () => {
-  titleBar.style.background = 'rgba(235, 235, 235, 0.9)'
-  titleBar.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.12)'
-  document.querySelector('.main-content').style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.12)'
-})
+function updateTitleBarHoverEffect() {
+  // 移除之前的事件监听器
+  titleBar.removeEventListener('mouseenter', handleMouseEnter)
+  titleBar.removeEventListener('mouseleave', handleMouseLeave)
+  
+  // 根据当前主题模式设置不同的悬停效果
+  const isDarkMode = document.body.classList.contains('dark-mode')
+  
+  function handleMouseEnter() {
+    if (isDarkMode) {
+      titleBar.style.background = 'rgba(55, 55, 55, 0.9)'
+      titleBar.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.3)'
+      document.querySelector('.main-content').style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3)'
+    } else {
+      titleBar.style.background = 'rgba(235, 235, 235, 0.9)'
+      titleBar.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.12)'
+      document.querySelector('.main-content').style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.12)'
+    }
+  }
+  
+  function handleMouseLeave() {
+    if (isDarkMode) {
+      titleBar.style.background = 'rgba(45, 45, 45, 0.85)'
+      titleBar.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)'
+      document.querySelector('.main-content').style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)'
+    } else {
+      titleBar.style.background = 'rgba(240, 240, 240, 0.85)'
+      titleBar.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)'
+      document.querySelector('.main-content').style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.08)'
+    }
+  }
+  
+  // 添加新的事件监听器
+  titleBar.addEventListener('mouseenter', handleMouseEnter)
+  titleBar.addEventListener('mouseleave', handleMouseLeave)
+}
 
-titleBar.addEventListener('mouseleave', () => {
-  titleBar.style.background = 'rgba(240, 240, 240, 0.85)'
-  titleBar.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)'
-  document.querySelector('.main-content').style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.08)'
-})
+// 初始化标题栏悬停效果
+updateTitleBarHoverEffect()
+
+// 在主题切换时更新标题栏悬停效果
+function updateTitleBarStyleAfterThemeChange() {
+  const isDarkMode = document.body.classList.contains('dark-mode')
+  
+  // 重置标题栏样式，确保使用当前主题的默认样式
+  if (isDarkMode) {
+    titleBar.style.background = 'rgba(45, 45, 45, 0.85)'
+    titleBar.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)'
+  } else {
+    titleBar.style.background = 'rgba(240, 240, 240, 0.85)'
+    titleBar.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)'
+  }
+  
+  // 更新悬停效果
+  updateTitleBarHoverEffect()
+}
 
 // 处理最大化状态变化
 window.addEventListener('resize', () => {
@@ -117,11 +162,14 @@ function initSidebarTabs() {
   const contentAreas = document.querySelectorAll('.content-area')
   
   sidebarTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
+    tab.addEventListener('click', (e) => {
       const targetTab = tab.getAttribute('data-tab')
-      // 默认使用滑动动画，可以通过设置切换其他动画
+      // 每次点击时都读取最新的动画设置，确保切换后立即生效
       const animationType = localStorage.getItem('pageAnimationType') || 'slide'
-      switchTab(targetTab, false, animationType)
+      // 获取点击位置相对于视口的坐标
+      const clickX = e.clientX
+      const clickY = e.clientY
+      switchTab(targetTab, false, animationType, { x: clickX, y: clickY })
     })
     
     // 添加标签页悬停音效（可选）
@@ -152,14 +200,50 @@ function initSidebarTabs() {
           localStorage.setItem('pageAnimationType', 'rotate')
           console.log('页面动画已切换为：旋转')
           break
+        case '5':
+          e.preventDefault()
+          localStorage.setItem('pageAnimationType', 'fly')
+          console.log('页面动画已切换为：飞入')
+          break
       }
     }
   })
   
-  function switchTab(targetTab, immediate = false, animationType = 'slide') {
+  // 存储当前正在执行的动画定时器，用于中断动画
+  let currentAnimationTimer = null
+  
+  function switchTab(targetTab, immediate = false, animationType = 'slide', clickPos = null) {
     // 获取当前激活的标签页
     const currentActiveTab = document.querySelector('.sidebar-tab.active')
     const currentActiveContent = document.querySelector('.content-area[style*="display: block"]')
+    
+    // 检查是否已经在目标标签页
+    if (currentActiveTab && currentActiveTab.getAttribute('data-tab') === targetTab) {
+      // 如果是，清理可能存在的动画状态
+      if (currentAnimationTimer) {
+        clearTimeout(currentAnimationTimer)
+        currentAnimationTimer = null
+      }
+      // 清理当前内容区域的动画状态
+      const currentContent = document.getElementById(`${targetTab}-content`)
+      if (currentContent) {
+        // 移除动画类
+        currentContent.classList.remove('page-fade-in', 'page-slide-right', 'page-slide-left', 'page-zoom-in', 'page-rotate-in', 'page-fly-in')
+        // 重置所有样式
+        currentContent.style.transform = ''
+        currentContent.style.transformOrigin = ''
+        currentContent.style.transition = ''
+        currentContent.style.opacity = ''
+        currentContent.style.visibility = ''
+      }
+      return
+    }
+    
+    // 中断当前正在执行的动画
+    if (currentAnimationTimer) {
+      clearTimeout(currentAnimationTimer)
+      currentAnimationTimer = null
+    }
     
     // 移除所有标签页的激活状态
     sidebarTabs.forEach(tab => {
@@ -172,75 +256,10 @@ function initSidebarTabs() {
       activeTab.classList.add('active')
     }
     
-    // 确定动画方向
-    let animationClass = ''
-    if (!immediate) {
-      // 根据标签页顺序确定滑动方向
-      const tabOrder = ['chat', 'contacts', 'profile', 'settings']
-      const currentIndex = currentActiveTab ? tabOrder.indexOf(currentActiveTab.getAttribute('data-tab')) : -1
-      const targetIndex = tabOrder.indexOf(targetTab)
-      
-      if (animationType === 'fade') {
-        animationClass = 'page-fade-in'
-      } else if (animationType === 'zoom') {
-        animationClass = 'page-zoom-in'
-      } else if (animationType === 'rotate') {
-        animationClass = 'page-rotate-in'
-      } else {
-        // 默认滑动效果
-        if (currentIndex === -1 || targetIndex > currentIndex) {
-          animationClass = 'page-slide-right'
-        } else {
-          animationClass = 'page-slide-left'
-        }
-      }
-    }
-    
-    // 处理当前内容区域的淡出效果
-    if (currentActiveContent && currentActiveContent.id !== `${targetTab}-content`) {
-      currentActiveContent.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-      currentActiveContent.style.opacity = '0'
-      currentActiveContent.style.transform = 'translateX(-30px) scale(0.95)'
-      currentActiveContent.style.visibility = 'hidden'
-      
-      // 立即处理内容切换，避免延迟
-      currentActiveContent.style.display = 'none'
-      showNewContent()
-    } else {
-      showNewContent()
-    }
-    
-    function showNewContent() {
-      // 显示目标内容区域
-      const activeContent = document.getElementById(`${targetTab}-content`)
-      if (activeContent) {
-        activeContent.style.display = 'block'
-        
-        if (immediate) {
-          // 立即显示，无动画
-          activeContent.style.transition = 'none'
-          activeContent.style.opacity = '1'
-          activeContent.style.transform = 'translateX(0) scale(1)'
-          activeContent.style.visibility = 'visible'
-        } else {
-          // 添加动画类
-          if (animationClass) {
-            activeContent.classList.add(animationClass)
-          }
-          
-          // 设置最终状态
-          activeContent.style.opacity = '1'
-          activeContent.style.transform = 'translateX(0) scale(1)'
-          activeContent.style.visibility = 'visible'
-          
-          // 动画结束后移除类 - 使用 requestAnimationFrame 替代 setTimeout
-          requestAnimationFrame(() => {
-            if (animationClass) {
-              activeContent.classList.remove(animationClass)
-            }
-          })
-        }
-      }
+    // 目标内容区域
+    const targetContent = document.getElementById(`${targetTab}-content`)
+    if (!targetContent) {
+      return
     }
     
     // 更新窗口标题
@@ -251,6 +270,102 @@ function initSidebarTabs() {
       'settings': '设置'
     }
     document.title = `无界 - ${tabNames[targetTab] || '聊天'}`
+    
+    // 如果不需要动画，直接显示目标内容区域
+    if (immediate) {
+      if (currentActiveContent && currentActiveContent.id !== targetContent.id) {
+        currentActiveContent.style.display = 'none'
+      }
+      targetContent.style.display = 'block'
+      targetContent.style.opacity = '1'
+      targetContent.style.transform = 'translateX(0) scale(1)'
+      targetContent.style.visibility = 'visible'
+      return
+    }
+    
+    // 确定动画方向
+    let animationClass = ''
+    // 根据标签页顺序确定滑动方向
+    const tabOrder = ['chat', 'contacts', 'profile', 'settings']
+    const currentIndex = currentActiveTab ? tabOrder.indexOf(currentActiveTab.getAttribute('data-tab')) : -1
+    const targetIndex = tabOrder.indexOf(targetTab)
+    
+    if (animationType === 'fade') {
+      animationClass = 'page-fade-in'
+    } else if (animationType === 'zoom') {
+      animationClass = 'page-zoom-in'
+    } else if (animationType === 'rotate') {
+      animationClass = 'page-rotate-in'
+    } else if (animationType === 'fly') {
+      // 飞入动画效果 - 使用螺旋进入动画
+      animationClass = 'page-fly-in'
+    } else {
+      // 默认滑动效果
+      if (currentIndex === -1 || targetIndex > currentIndex) {
+        animationClass = 'page-slide-right'
+      } else {
+        animationClass = 'page-slide-left'
+      }
+    }
+    
+    // 立即重置所有内容区域状态
+    document.querySelectorAll('.content-area').forEach(area => {
+      // 移除所有可能的动画类
+      area.classList.remove('page-fade-in', 'page-slide-right', 'page-slide-left', 'page-zoom-in', 'page-rotate-in', 'page-fly-in')
+      // 重置所有样式
+      area.style.display = 'none'
+      area.style.transition = ''
+      area.style.transform = ''
+      area.style.transformOrigin = ''
+      area.style.opacity = ''
+      area.style.visibility = ''
+    })
+    
+    // 显示目标内容区域
+    targetContent.style.display = 'block'
+    
+    // 保存原始transition值
+    const originalTransition = targetContent.style.transition
+    
+    // 如果是飞入动画，根据点击位置设置初始位置
+    if (animationType === 'fly' && clickPos) {
+      // 暂时禁用默认transition，避免与keyframes动画冲突
+      targetContent.style.transition = 'none'
+      
+      // 获取目标内容区域的中心位置
+      const rect = targetContent.getBoundingClientRect()
+      const centerX = rect.left + rect.width / 2
+      const centerY = rect.top + rect.height / 2
+      
+      // 计算点击位置到中心位置的差值
+      const deltaX = clickPos.x - centerX
+      const deltaY = clickPos.y - centerY
+      
+      // 设置初始变换原点为点击位置相对于内容区域的位置
+      const originX = (clickPos.x - rect.left) / rect.width * 100 + '%'
+      const originY = (clickPos.y - rect.top) / rect.height * 100 + '%'
+      
+      // 在添加动画类之前，先设置初始位置
+      targetContent.style.transform = `scale(0.2) translate(${deltaX}px, ${deltaY}px)`
+      targetContent.style.transformOrigin = `${originX} ${originY}`
+      
+      // 强制重排，确保初始状态生效
+      targetContent.offsetHeight
+    }
+    
+    // 添加动画类
+    targetContent.classList.add(animationClass)
+    
+    // 动画结束后移除动画类和重置样式
+    currentAnimationTimer = setTimeout(() => {
+      targetContent.classList.remove(animationClass)
+      // 重置所有动画相关样式
+      targetContent.style.transform = ''
+      targetContent.style.transformOrigin = ''
+      // 恢复原始transition值
+      targetContent.style.transition = originalTransition
+      currentAnimationTimer = null
+    }, 600) // 等待600ms，与动画持续时间一致
   }
   
   // 默认激活聊天标签页 - 使用立即模式避免动画延迟
@@ -854,6 +969,15 @@ function initSettingsPage() {
     if (activeTab) {
       activeTab.classList.add('active')
     }
+    
+    // 如果切换到通用设置标签页，重新初始化自定义下拉菜单
+    if (targetTab === 'test') {
+      // 延迟初始化，确保DOM已经更新
+      setTimeout(() => {
+        initCustomDropdowns()
+        console.log('切换到通用设置标签页，重新初始化下拉菜单')
+      }, 50)
+    }
   }
   
   // 开关切换功能
@@ -886,8 +1010,10 @@ function initSettingsPage() {
     })
   })
   
-  // 初始化自定义下拉菜单
-  initCustomDropdowns()
+  // 延迟初始化自定义下拉菜单，确保设置页面的内容区域已经显示
+  setTimeout(() => {
+    initCustomDropdowns()
+  }, 100)
   
   // 初始化API密钥数据管理
   initApiKeysData()
@@ -1349,9 +1475,37 @@ function bindApiKeyEvents() {
 function initCustomDropdowns() {
   const customDropdowns = document.querySelectorAll('.custom-dropdown')
   
+  // 初始化动画选择器的默认值
+  const animationSelected = document.getElementById('animation-type-selected')
+  if (animationSelected) {
+    const savedAnimation = localStorage.getItem('pageAnimationType') || 'slide'
+    // 将动画类型映射为显示文本
+    const animationTextMap = {
+      'slide': '滑动',
+      'fade': '淡入淡出',
+      'zoom': '缩放',
+      'rotate': '旋转',
+      'fly': '飞入'
+    }
+    animationSelected.textContent = animationTextMap[savedAnimation] || '滑动'
+  }
+  
+  // 使用addEventListener绑定事件监听器
   customDropdowns.forEach(dropdown => {
     const selected = dropdown.querySelector('.custom-dropdown-selected')
     const options = dropdown.querySelector('.custom-dropdown-options')
+    
+    if (!selected || !options) {
+      return
+    }
+    
+    // 确保下拉框有足够高的z-index
+    selected.style.zIndex = '1001'
+    options.style.zIndex = '1001'
+    
+    // 确保options的样式正确初始化
+    options.style.display = 'none'
+    options.classList.remove('show')
     
     // 点击选中区域展开/收起下拉菜单
     selected.addEventListener('click', (e) => {
@@ -1361,19 +1515,32 @@ function initCustomDropdowns() {
       document.querySelectorAll('.custom-dropdown-options').forEach(opt => {
         if (opt !== options) {
           opt.classList.remove('show')
+          opt.style.display = 'none'
         }
       })
       
       // 切换当前下拉菜单
-      options.classList.toggle('show')
+      if (options.classList.contains('show')) {
+        options.classList.remove('show')
+        setTimeout(() => {
+          options.style.display = 'none'
+        }, 300)
+      } else {
+        options.style.display = 'block'
+        // 使用setTimeout确保display属性已经更新，然后添加show类
+        setTimeout(() => {
+          options.classList.add('show')
+        }, 10)
+      }
     })
     
     // 点击选项选择
     const optionItems = options.querySelectorAll('.custom-dropdown-option')
     optionItems.forEach(option => {
-      option.addEventListener('click', () => {
+      option.addEventListener('click', (e) => {
+        e.stopPropagation()
         const value = option.getAttribute('data-value')
-        selected.textContent = value
+        selected.textContent = option.textContent
         
         // 更新选中状态
         optionItems.forEach(opt => {
@@ -1383,15 +1550,35 @@ function initCustomDropdowns() {
         
         // 关闭下拉菜单
         options.classList.remove('show')
+        setTimeout(() => {
+          options.style.display = 'none'
+        }, 300)
+        
+        // 如果是动画类型选择器，保存到localStorage并立即更新动画设置
+    if (selected.id === 'animation-type-selected') {
+      localStorage.setItem('pageAnimationType', value)
+      // 清除当前所有内容区域的动画类，确保下次点击标签页时使用新的动画类型
+      document.querySelectorAll('.content-area').forEach(area => {
+        area.classList.remove('page-fade-in', 'page-slide-right', 'page-slide-left', 'page-zoom-in', 'page-rotate-in', 'page-fly-in-right', 'page-fly-in-left', 'page-fly-in')
+      })
+    }
       })
     })
   })
   
   // 点击外部关闭下拉菜单
-  document.addEventListener('click', () => {
-    document.querySelectorAll('.custom-dropdown-options').forEach(options => {
-      options.classList.remove('show')
-    })
+  // 使用addEventListener而不是document.onclick，避免覆盖其他点击事件
+  document.addEventListener('click', (e) => {
+    // 检查点击事件是否来自下拉菜单内部
+    const isDropdownClick = e.target.closest('.custom-dropdown')
+    if (!isDropdownClick) {
+      document.querySelectorAll('.custom-dropdown-options').forEach(options => {
+        options.classList.remove('show')
+        setTimeout(() => {
+          options.style.display = 'none'
+        }, 300)
+      })
+    }
   })
 }
 
@@ -1434,6 +1621,9 @@ function toggleTheme(mode) {
   
   // 立即恢复过渡效果，移除延迟
   document.body.style.transition = ''
+  
+  // 更新标题栏样式，确保主题正确应用
+  updateTitleBarStyleAfterThemeChange()
 }
 
 // 防止鼠标滚轮缩放

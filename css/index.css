@@ -452,6 +452,28 @@ body {
   animation: rotateIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 从点击位置飞入动画 */
+@keyframes flyIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) translate(0, 0);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.02) translate(0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+/* 飞入动画类 */
+.page-fly-in {
+  animation: flyIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+}
+
 /* 页面切换时的背景模糊效果 */
 @keyframes blurIn {
   from {
@@ -2136,12 +2158,24 @@ body.dark-mode .modal-header h2 {
   color: #fff;
 }
 
-body.dark-mode .close-btn {
+/* 深色模式下的关闭按钮样式 */
+body.dark-mode .window-btn.close {
+  background: rgba(60, 60, 60, 0.8);
   color: #adb5bd;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-body.dark-mode .close-btn:hover {
-  color: #fff;
+body.dark-mode .window-btn.close:hover {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  color: white;
+  box-shadow: 0 8px 24px rgba(238, 90, 82, 0.5);
+  transform: translateY(-3px) scale(1.08);
+  border-color: transparent;
+}
+
+body.dark-mode .window-btn.close:active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: 0 2px 6px rgba(238, 90, 82, 0.3);
 }
 
 body.dark-mode .form-group label {
