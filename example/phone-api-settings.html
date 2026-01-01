@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-Keys管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+
+        body {
+            background-color: #f4e9ff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+        }
+
+        /* 主容器 */
+        .api-key-container {
+            width: 600px;
+            background-color: #fff;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 8px 30px rgba(151, 93, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 背景装饰 */
+        .api-key-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background-color: #f9f0ff;
+            border-radius: 0 0 0 100%;
+            z-index: 0;
+        }
+
+        .api-key-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 150px;
+            height: 150px;
+            background-color: #f9f0ff;
+            border-radius: 0 100% 0 0;
+            z-index: 0;
+        }
+
+        /* 头部导航 */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f4e9ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            color: #7b2cbf;
+            font-size: 18px;
+            transition: background-color 0.2s;
+        }
+
+        .back-btn:hover {
+            background-color: #e9d8fd;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #4a0072;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .help-btn, .more-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f4e9ff;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            color: #7b2cbf;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        .help-btn:hover, .more-btn:hover {
+            background-color: #e9d8fd;
+        }
+
+        /* 密钥数量统计 */
+        .key-count-card {
+            background-color: #fff;
+            border: 1px solid #f0e6ff;
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 2px 10px rgba(123, 44, 191, 0.05);
+        }
+
+        .count-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #7b2cbf;
+            margin-bottom: 8px;
+        }
+
+        .count-label {
+            font-size: 14px;
+            color: #9d4edd;
+        }
+
+        /* 密钥卡片 */
+        .key-card {
+            background-color: #fff;
+            border: 1px solid #f0e6ff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 60px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 2px 10px rgba(123, 44, 191, 0.05);
+        }
+
+        .key-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .key-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #4a0072;
+        }
+
+        .status-tag {
+            background-color: #d4edda;
+            color: #28a745;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .key-desensitize {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .desensitize-text {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .copy-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #f4e9ff;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            color: #7b2cbf;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .copy-btn:hover {
+            background-color: #e9d8fd;
+        }
+
+        .key-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #9d4edd;
+            margin-bottom: 20px;
+        }
+
+        .key-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-btn {
+            flex: 1;
+            height: 40px;
+            background-color: #f4e9ff;
+            color: #7b2cbf;
+            border: none;
+            outline: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .edit-btn:hover {
+            background-color: #e9d8fd;
+        }
+
+        .delete-btn {
+            flex: 1;
+            height: 40px;
+            background-color: #f8d7da;
+            color: #dc3545;
+            border: none;
+            outline: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .delete-btn:hover {
+            background-color: #f5c6cb;
+        }
+
+        /* 添加密钥按钮 */
+        .add-key-btn {
+            width: 100%;
+            height: 60px;
+            background-color: #7b2cbf;
+            color: #fff;
+            border: none;
+            outline: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .add-key-btn:hover {
+            background-color: #6a1b9a;
+        }
+
+        .add-key-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .api-key-container {
+                width: 100%;
+                padding: 30px 20px;
+            }
+            
+            .count-number {
+                font-size: 40px;
+            }
+            
+            .key-text {
+                font-size: 16px;
+            }
+        }
+    </style>
+    <!-- 图标库 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="api-key-container">
+        <!-- 头部 -->
+        <div class="header">
+            <button class="back-btn">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <h1 class="title">API-Keys管理</h1>
+            <div class="header-actions">
+                <button class="help-btn">
+                    <i class="fas fa-question"></i>
+                </button>
+                <button class="more-btn">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 密钥数量 -->
+        <div class="key-count-card">
+            <div class="count-number">1</div>
+            <div class="count-label">总密钥数</div>
+        </div>
+
+        <!-- 密钥卡片 -->
+        <div class="key-card">
+            <div class="key-main">
+                <div class="key-text">1231231231231231321</div>
+                <div class="status-tag">活跃</div>
+            </div>
+            <div class="key-desensitize">
+                <div class="desensitize-text">2131233······33333333</div>
+                <button class="copy-btn">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <div class="key-meta">
+                <div>平台: OpenAI</div>
+                <div>创建于 2026-01-01</div>
+            </div>
+            <div class="key-actions">
+                <button class="edit-btn">编辑</button>
+                <button class="delete-btn">删除</button>
+            </div>
+        </div>
+
+        <!-- 添加密钥按钮 -->
+        <button class="add-key-btn">
+            <i class="fas fa-plus"></i>
+            添加新密钥
+        </button>
+    </div>
+</body>
+</html>

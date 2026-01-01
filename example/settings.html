@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test设置页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+            color: #fff;
+        }
+        body {
+            background-color: #1e1e1e;
+            display: flex;
+            height: 600px;
+            width: 800px;
+            border: 1px solid #333;
+            margin: 20px auto;
+        }
+        /* 左侧导航栏 - 仅保留单个导航项 */
+        .sidebar {
+            width: 180px;
+            background-color: #2d2d2d;
+            padding: 10px 0;
+        }
+        .sidebar-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .sidebar-item.active {
+            background-color: #444;
+        }
+        /* 右侧主内容区 */
+        .main-content {
+            flex: 1;
+            background-color: #1e1e1e;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        /* 界面模式 */
+        .mode-group {
+            display: flex;
+            gap: 15px;
+        }
+        .mode-item {
+            width: 120px;
+            text-align: center;
+        }
+        .mode-preview {
+            height: 80px;
+            background-color: #333;
+            border: 2px solid transparent;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mode-item.active .mode-preview {
+            border-color: #a77eff;
+        }
+        /* 外观设置 */
+        .theme-group {
+            display: flex;
+            gap: 15px;
+        }
+        .theme-item {
+            width: 120px;
+            text-align: center;
+        }
+        .theme-preview {
+            height: 80px;
+            background-color: #333;
+            border: 2px solid transparent;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .theme-item.active .theme-preview {
+            border-color: #a77eff;
+        }
+        .theme-link {
+            color: #4da6ff;
+            cursor: pointer;
+            margin: 10px 0;
+            display: inline-block;
+        }
+        /* 聊天设置项 */
+        .chat-setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 5px 0;
+        }
+        .setting-label {
+            font-size: 14px;
+        }
+        .setting-control {
+            background-color: #333;
+            border: none;
+            padding: 5px 10px;
+            color: #fff;
+        }
+        /* 开关样式 */
+        .toggle-switch {
+            width: 40px;
+            height: 20px;
+            background-color: #555;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+        .toggle-switch.active {
+            background-color: #a77eff;
+        }
+        .toggle-dot {
+            width: 16px;
+            height: 16px;
+            background-color: #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: left 0.2s;
+        }
+        .toggle-switch.active .toggle-dot {
+            left: 22px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧导航 - 仅保留唯一含Test的标签页，删除所有其他多余导航项 -->
+    <div class="sidebar">
+        <div class="sidebar-item active">
+            <span>⚙️</span>
+            <span>Test</span>
+        </div>
+    </div>
+
+    <!-- 右侧内容 - 仅保留一处Test核心内容，布局完整 -->
+    <div class="main-content">
+        <div class="section">
+            <div class="section-title">Test</div>
+            <div class="mode-group">
+                <div class="mode-item active">
+                    <div class="mode-preview"></div>
+                    <div></div>
+                </div>
+                <div class="mode-item">
+                    <div class="mode-preview"></div>
+                    <div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title"></div>
+            <div class="theme-group">
+                <div class="theme-item">
+                    <div class="theme-preview"></div>
+                    <div></div>
+                </div>
+                <div class="theme-item active">
+                    <div class="theme-preview"></div>
+                    <div></div>
+                </div>
+                <div class="theme-item">
+                    <div class="theme-preview"></div>
+                    <div></div>
+                </div>
+            </div>
+            <div class="theme-link"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title"></div>
+            <div class="chat-setting-item">
+                <div class="setting-label"></div>
+                <select class="setting-control">
+                    <option></option>
+                </select>
+            </div>
+            <div class="chat-setting-item">
+                <div class="setting-label"></div>
+                <div class="toggle-switch">
+                    <div class="toggle-dot"></div>
+                </div>
+            </div>
+            <div class="chat-setting-item">
+                <div class="setting-label"></div>
+                <select class="setting-control">
+                    <option></option>
+                </select>
+            </div>
+            <div class="chat-setting-item">
+                <div class="setting-label"></div>
+                <div class="toggle-switch active">
+                    <div class="toggle-dot"></div>
+                </div>
+            </div>
+            <div class="chat-setting-item">
+                <div class="setting-label"></div>
+                <div class="toggle-switch active">
+                    <div class="toggle-dot"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,9 +1,25 @@
 const { app, BrowserWindow, ipcMain, Menu } = require('electron')
+const path = require('path')
+const fs = require('fs')
 
 
 
+
+// 配置缓存目录，避免权限问题
+const userDataPath = app.getPath('userData')
+const cachePath = path.join(userDataPath, 'cache')
+
+// 确保缓存目录存在
+try {
+  if (!fs.existsSync(cachePath)) {
+    fs.mkdirSync(cachePath, { recursive: true })
+  }
+} catch (error) {
+  console.warn('无法创建缓存目录:', error)
+}
 
 const createWindow = () => {
+  
   const win = new BrowserWindow({
     width: 900,
     height: 600,
@@ -14,9 +30,17 @@ const createWindow = () => {
       contextIsolation: false,
       sandbox: false,
       enableRemoteModule: true,
-      webSecurity: false
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      // 配置缓存目录
+      partition: 'persist:main',
+      // 禁用GPU缓存以避免相关错误
+      additionalArguments: ['--disable-gpu-disk-cache', '--disable-gpu-shader-disk-cache']
     },
-
+    // 禁用硬件加速以避免GPU缓存错误
+    webSecurity: true,
+    // 配置缓存路径
+    partition: 'persist:main'
   })
 
   win.loadFile('index.html')
@@ -65,6 +89,12 @@ const createWindow = () => {
     win.close()
   })
 }
+
+// 配置应用启动参数，避免缓存错误
+app.commandLine.appendSwitch('disable-gpu-disk-cache')
+app.commandLine.appendSwitch('disable-gpu-shader-disk-cache')
+app.commandLine.appendSwitch('disk-cache-dir', cachePath)
+app.commandLine.appendSwitch('aggressive-cache-discard')
 
 app.whenReady().then(() => {
   createWindow()

@@ -5,13 +5,13 @@
   <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
   <meta
     http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; img-src 'self' blob: data:"
+    content="default-src 'self'; script-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'"
   />
   <meta
     http-equiv="X-Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; img-src 'self' blob: data:"
+    content="default-src 'self'; script-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'"
   />
-  <title>无界AI聊天</title>
+  <title>无界</title>
   <link rel="stylesheet" href="./css/index.css" />
   <!-- 引入 cropper.css -->
   <link rel="stylesheet" href="./node_modules/cropperjs/dist/cropper.css" />
@@ -23,7 +23,7 @@
         <div class="app-icon">
           <img src="images/WuJieAiChat.png" alt="应用图标" width="24" height="24" id="appIcon" style="border-radius: 6px;">
         </div>
-        <div class="app-title">无界AI聊天</div>
+        <div class="app-title">无界</div>
       </div>
       <div class="window-controls">
         <button class="window-btn minimize" id="minimizeBtn" title="最小化">
@@ -90,8 +90,75 @@
         <p>欢迎使用无界AI聊天 - 聊天功能</p>
       </div>
       <div class="content-area" id="contacts-content" style="display: none;">
-        <h1>联系人</h1>
-        <p>联系人列表将在这里显示</p>
+        <div class="contacts-container">
+          <div class="contacts-header">
+            <h1>联系人</h1>
+            <div class="search-bar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M21 21L16.65 16.65" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <input type="text" placeholder="搜索联系人" class="search-input" id="contacts-search">
+            </div>
+          </div>
+          
+          <div class="contacts-list">
+            <!-- 联系人分组 -->
+            <div class="contacts-group">
+              <div class="group-header">
+                <span class="group-title">联系人</span>
+                <span class="group-count">3</span>
+              </div>
+              <div class="group-contacts">
+                <!-- 联系人卡片 -->
+                <div class="contact-item">
+                  <div class="contact-avatar">
+                    <img src="images/app-icon.png" alt="DeepSeek" width="48" height="48">
+                  </div>
+                  <div class="contact-info">
+                    <div class="contact-name">DeepSeek</div>
+                    <div class="contact-status online">在线</div>
+                  </div>
+                  <button class="contact-action">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+                
+                <div class="contact-item">
+                  <div class="contact-avatar">
+                    <img src="images/app-icon.png" alt="阿里云百炼" width="48" height="48">
+                  </div>
+                  <div class="contact-info">
+                    <div class="contact-name">阿里云百炼</div>
+                    <div class="contact-status online">在线</div>
+                  </div>
+                  <button class="contact-action">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+                
+                <div class="contact-item">
+                  <div class="contact-avatar">
+                    <img src="images/app-icon.png" alt="Kimi" width="48" height="48">
+                  </div>
+                  <div class="contact-info">
+                    <div class="contact-name">Kimi</div>
+                    <div class="contact-status online">在线</div>
+                  </div>
+                  <button class="contact-action">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="content-area" id="profile-content" style="display: none;">
         <div class="profile-container">
@@ -166,8 +233,192 @@
         </div>
       </div>
       <div class="content-area" id="settings-content" style="display: none;">
-        <h1>设置</h1>
-        <p>应用设置将在这里显示</p>
+        <div class="settings-container">
+          <!-- 左侧导航栏 -->
+          <div class="settings-sidebar">
+            <div class="sidebar-item active" data-tab="test">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <span>通用</span>
+            </div>
+            <div class="sidebar-item" data-tab="api-keys">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21.0667 5C21.6586 5.95805 22 7.08604 22 8.29344C22 11.7692 19.1708 14.5869 15.6807 14.5869C15.0439 14.5869 13.5939 14.4405 12.8885 13.8551L12.0067 14.7333C11.272 15.465 11.8598 15.465 12.1537 16.0505C12.1537 16.0505 12.8885 17.075 12.1537 18.0995C11.7128 18.6849 10.4783 19.5045 9.06754 18.0995L8.77362 18.3922C8.77362 18.3922 9.65538 19.4167 8.92058 20.4412C8.4797 21.0267 7.30403 21.6121 6.27531 20.5876C6.22633 20.6364 5.952 20.9096 5.2466 21.6121C4.54119 22.3146 3.67905 21.9048 3.33616 21.6121L2.45441 20.7339C1.63143 19.9143 2.1115 19.0264 2.45441 18.6849L10.0963 11.0743C10.0963 11.0743 9.3615 9.90338 9.3615 8.29344C9.3615 4.81767 12.1907 2 15.6807 2C16.4995 2 17.282 2.15509 18 2.43738" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M17.8851 8.29353C17.8851 9.50601 16.8982 10.4889 15.6807 10.4889C14.4633 10.4889 13.4763 9.50601 13.4763 8.29353C13.4763 7.08105 14.4633 6.09814 15.6807 6.09814C16.8982 6.09814 17.8851 7.08105 17.8851 8.29353Z" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <span>API-Keys管理</span>
+            </div>
+            <div class="sidebar-item" data-tab="about">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 16.75C11.8019 16.7474 11.6126 16.6676 11.4725 16.5275C11.3324 16.3874 11.2526 16.1981 11.25 16V11C11.25 10.8011 11.329 10.6103 11.4697 10.4697C11.6103 10.329 11.8011 10.25 12 10.25C12.1989 10.25 12.3897 10.329 12.5303 10.4697C12.671 10.6103 12.75 10.8011 12.75 11V16C12.7474 16.1981 12.6676 16.3874 12.5275 16.5275C12.3874 16.6676 12.1981 16.7474 12 16.75Z"/>
+                <path d="M12 9.25C11.8019 9.24741 11.6126 9.16756 11.4725 9.02747C11.3324 8.88737 11.2526 8.69811 11.25 8.5V8C11.25 7.80109 11.329 7.61032 11.4697 7.46967C11.6103 7.32902 11.8011 7.25 12 7.25C12.1989 7.25 12.3897 7.32902 12.5303 7.46967C12.671 7.61032 12.75 7.80109 12.75 8V8.5C12.7474 8.69811 12.6676 8.88737 12.5275 9.02747C12.3874 9.16756 12.1981 9.24741 12 9.25Z"/>
+                <path d="M12 21C10.22 21 8.47991 20.4722 6.99987 19.4832C5.51983 18.4943 4.36628 17.0887 3.68509 15.4442C3.0039 13.7996 2.82567 11.99 3.17294 10.2442C3.5202 8.49836 4.37737 6.89472 5.63604 5.63604C6.89472 4.37737 8.49836 3.5202 10.2442 3.17294C11.99 2.82567 13.7996 3.0039 15.4442 3.68509C17.0887 4.36628 18.4943 5.51983 19.4832 6.99987C20.4722 8.47991 21 10.22 21 12C21 14.387 20.0518 16.6761 18.364 18.364C16.6761 20.0518 14.387 21 12 21ZM12 4.5C10.5166 4.5 9.0666 4.93987 7.83323 5.76398C6.59986 6.58809 5.63856 7.75943 5.07091 9.12988C4.50325 10.5003 4.35473 12.0083 4.64411 13.4632C4.9335 14.918 5.64781 16.2544 6.6967 17.3033C7.7456 18.3522 9.08197 19.0665 10.5368 19.3559C11.9917 19.6453 13.4997 19.4968 14.8701 18.9291C16.2406 18.3614 17.4119 17.4001 18.236 16.1668C19.0601 14.9334 19.5 13.4834 19.5 12C19.5 10.0109 18.7098 8.10323 17.3033 6.6967C15.8968 5.29018 13.9891 4.5 12 4.5Z"/>
+              </svg>
+              <span>关于</span>
+            </div>
+          </div>
+          
+          <!-- 右侧主内容区 -->
+          <div class="settings-main">
+            <!-- Test 设置内容 -->
+            <div class="settings-tab active" id="test-tab">
+              <h1>通用设置</h1>
+              
+              <div class="section">
+                <div class="section-title">界面模式</div>
+                <div class="mode-group">
+                  <div class="mode-item active" data-mode="light">
+                    <div class="mode-preview">浅色</div>
+                    <div>浅色模式</div>
+                  </div>
+                  <div class="mode-item" data-mode="dark">
+                    <div class="mode-preview">深色</div>
+                    <div>深色模式</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="section">
+                <div class="section-title">应用设置</div>
+                <div class="chat-setting-item custom-dropdown-wrapper">
+                  <div class="setting-label">消息提示音</div>
+                  <div class="custom-dropdown">
+                    <div class="custom-dropdown-selected">默认</div>
+                    <div class="custom-dropdown-options" style="display: none;">
+                      <div class="custom-dropdown-option" data-value="默认">默认</div>
+                      <div class="custom-dropdown-option" data-value="静音">静音</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- API-Keys 管理内容 -->
+            <div class="settings-tab" id="api-keys-tab">
+              <h1>API-Keys管理</h1>
+              
+              <!-- 密钥数量统计和添加按钮 -->
+              <div class="section">
+                <div class="key-count-card">
+                  <div class="count-number">1</div>
+                  <div class="count-label">总密钥数</div>
+                  <button class="add-key-btn-small">
+                    <span>+</span>添加新密钥
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 密钥列表 -->
+              <div class="section">
+                <div class="key-card">
+                  <div class="key-main">
+                    <div class="key-text">OpenAI API Key</div>
+                    <div class="status-tag">活跃</div>
+                  </div>
+                  <div class="key-desensitize">
+                    <div class="desensitize-text">sk-1234······ef1234</div>
+                    <button class="copy-btn">
+                      <span>📋</span>
+                    </button>
+                  </div>
+                  <div class="key-meta">
+                    <div>平台: OpenAI</div>
+                    <div>创建于 2026-01-01</div>
+                  </div>
+                  <div class="key-actions">
+                    <button class="edit-btn">编辑</button>
+                    <button class="delete-btn">删除</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 关于页面内容 -->
+            <div class="settings-tab" id="about-tab">
+              <h1>关于无界AI聊天</h1>
+              
+              <div class="about-container">
+                <div class="about-logo">
+                  <div class="logo-circle">
+                    <img src="images/app-icon.png" alt="无界AI聊天" width="120" height="120">
+                  </div>
+                  <h2>无界AI聊天</h2>
+                </div>
+                
+                <div class="about-info">
+                  <div class="info-item">
+                    <span class="info-label">版本号:</span>
+                    <span class="info-value">1.0.0</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">开发者:</span>
+                    <span class="info-value">BlackHoleEraTeam</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">更新日期:</span>
+                    <span class="info-value">2026-01-01</span>
+                  </div>
+                </div>
+                
+                <div class="about-description">
+                  <p>无界AI聊天是一款功能强大的桌面AI聊天应用，支持多种API平台，提供安全、高效的聊天体验。</p>
+                  <p>应用采用现代化的设计，支持深色/浅色模式切换，提供友好的用户界面和流畅的操作体验。</p>
+                </div>
+                
+                <div class="about-features">
+                  <h3>主要功能</h3>
+                  <ul>
+                    <li>支持多种AI API平台</li>
+                    <li>安全的API密钥管理</li>
+                    <li>深色/浅色模式切换</li>
+                    <li>自定义头像上传和裁剪</li>
+                    <li>现代化的用户界面</li>
+                  </ul>
+                </div>
+                
+                <div class="about-copyright">
+                  <p>© 2026 BlackHoleEraTeam. 保留所有权利。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- API配置弹窗 -->
+  <div id="api-config-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">添加API密钥</h2>
+        <button class="close-btn" id="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="api-platform">API平台</label>
+          <select id="api-platform" class="form-control">
+            <option value="DeepSeek">DeepSeek</option>
+            <option value="阿里云百炼">阿里云百炼</option>
+            <option value="Kimi">Kimi</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="api-name">API名称</label>
+          <input type="text" id="api-name" class="form-control" placeholder="请输入API名称">
+          <span class="error-message" id="api-name-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="api-key">API-Key</label>
+          <input type="text" id="api-key" class="form-control" placeholder="请输入API密钥">
+          <span class="error-message" id="api-key-error"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-btn" class="btn btn-secondary">取消</button>
+          <button id="save-btn" class="btn btn-primary">保存</button>
       </div>
     </div>
   </div>
