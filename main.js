@@ -23,6 +23,8 @@ const createWindow = () => {
   const win = new BrowserWindow({
     width: 900,
     height: 600,
+    minWidth: 600,
+    minHeight: 400,
     frame: false, // 移除原生标题栏
     titleBarStyle: 'hidden', // 隐藏标题栏样式
     webPreferences: {

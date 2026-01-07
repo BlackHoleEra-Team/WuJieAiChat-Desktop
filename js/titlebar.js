@@ -269,7 +269,7 @@ function initSidebarTabs() {
       if (currentActiveContent && currentActiveContent.id !== targetContent.id) {
         currentActiveContent.style.display = 'none'
       }
-      targetContent.style.display = 'block'
+      targetContent.style.display = targetTab === 'chat' ? 'flex' : 'block'
       targetContent.style.opacity = '1'
       targetContent.style.transform = 'translateX(0) scale(1)'
       targetContent.style.visibility = 'visible'
@@ -315,7 +315,7 @@ function initSidebarTabs() {
     })
     
     // 显示目标内容区域
-    targetContent.style.display = 'block'
+    targetContent.style.display = targetTab === 'chat' ? 'flex' : 'block'
     
     // 保存原始transition值
     const originalTransition = targetContent.style.transition
@@ -407,6 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initProfilePage()
   initContactsPage()
   initSettingsPage()
+  initBackgroundImage()
+  initBackgroundOpacity()
 })
 
 // 个人资料页面功能
@@ -1488,6 +1490,22 @@ function initCustomDropdowns() {
     animationSelected.textContent = animationTextMap[savedAnimation] || '滑动'
   }
   
+  // 初始化背景样式选择器的默认值
+  const backgroundSelected = document.getElementById('background-type-selected')
+  if (backgroundSelected) {
+    const savedBackground = localStorage.getItem('backgroundType') || 'default'
+    // 将背景类型映射为显示文本
+    const backgroundTextMap = {
+      'default': '默认',
+      'light': '浅色渐变',
+      'dark': '深色渐变',
+      'blur': '毛玻璃效果'
+    }
+    backgroundSelected.textContent = backgroundTextMap[savedBackground] || '默认'
+    // 应用背景样式
+    applyBackgroundStyle(savedBackground)
+  }
+  
   // 使用addEventListener绑定事件监听器
   customDropdowns.forEach(dropdown => {
     const selected = dropdown.querySelector('.custom-dropdown-selected')
@@ -1553,13 +1571,19 @@ function initCustomDropdowns() {
         }, 300)
         
         // 如果是动画类型选择器，保存到localStorage并立即更新动画设置
-    if (selected.id === 'animation-type-selected') {
-      localStorage.setItem('pageAnimationType', value)
-      // 清除当前所有内容区域的动画类，确保下次点击标签页时使用新的动画类型
-      document.querySelectorAll('.content-area').forEach(area => {
-        area.classList.remove('page-fade-in', 'page-slide-right', 'page-slide-left', 'page-zoom-in', 'page-rotate-in', 'page-fly-in-right', 'page-fly-in-left', 'page-fly-in')
-      })
-    }
+        if (selected.id === 'animation-type-selected') {
+          localStorage.setItem('pageAnimationType', value)
+          // 清除当前所有内容区域的动画类，确保下次点击标签页时使用新的动画类型
+          document.querySelectorAll('.content-area').forEach(area => {
+            area.classList.remove('page-fade-in', 'page-slide-right', 'page-slide-left', 'page-zoom-in', 'page-rotate-in', 'page-fly-in-right', 'page-fly-in-left', 'page-fly-in')
+          })
+        }
+        
+        // 如果是背景样式选择器，保存到localStorage并立即应用
+        if (selected.id === 'background-type-selected') {
+          localStorage.setItem('backgroundType', value)
+          applyBackgroundStyle(value)
+        }
       })
     })
   })
@@ -1580,6 +1604,52 @@ function initCustomDropdowns() {
   })
 }
 
+// 应用背景样式函数
+function applyBackgroundStyle(type) {
+  const body = document.body
+  
+  // 移除所有背景样式类
+  body.classList.remove('bg-default', 'bg-light', 'bg-dark', 'bg-blur')
+  
+  // 添加选择的背景样式类
+  body.classList.add(`bg-${type}`)
+  
+  // 根据背景类型调整其他元素样式
+  const sidebar = document.querySelector('.sidebar')
+  const chatHeader = document.querySelector('.chat-header')
+  const chatInputArea = document.querySelector('.chat-input-area')
+  
+  if (type === 'blur') {
+    // 增强毛玻璃效果
+    if (sidebar) {
+      sidebar.style.backdropFilter = 'blur(20px) saturate(120%)'
+      sidebar.style.webkitBackdropFilter = 'blur(20px) saturate(120%)'
+    }
+    if (chatHeader) {
+      chatHeader.style.backdropFilter = 'blur(20px) saturate(120%)'
+      chatHeader.style.webkitBackdropFilter = 'blur(20px) saturate(120%)'
+    }
+    if (chatInputArea) {
+      chatInputArea.style.backdropFilter = 'blur(20px) saturate(120%)'
+      chatInputArea.style.webkitBackdropFilter = 'blur(20px) saturate(120%)'
+    }
+  } else {
+    // 恢复默认效果
+    if (sidebar) {
+      sidebar.style.backdropFilter = ''
+      sidebar.style.webkitBackdropFilter = ''
+    }
+    if (chatHeader) {
+      chatHeader.style.backdropFilter = ''
+      chatHeader.style.webkitBackdropFilter = ''
+    }
+    if (chatInputArea) {
+      chatInputArea.style.backdropFilter = ''
+      chatInputArea.style.webkitBackdropFilter = ''
+    }
+  }
+}
+
 // 初始化主题
 function initTheme() {
   // 从本地存储获取主题设置
@@ -1597,6 +1667,172 @@ function initTheme() {
   if (activeModeItem) {
     activeModeItem.classList.add('active')
   }
+}
+
+// 初始化背景图片功能
+function initBackgroundImage() {
+  const backgroundInput = document.getElementById('background-input')
+  const backgroundPreview = document.getElementById('background-preview')
+  const removeBackgroundBtn = document.getElementById('remove-background-btn')
+  
+  if (!backgroundInput || !backgroundPreview || !removeBackgroundBtn) {
+    return
+  }
+  
+  // 从本地存储加载背景图片
+  const savedBackground = localStorage.getItem('customBackground')
+  if (savedBackground) {
+    applyBackgroundImage(savedBackground)
+    updateBackgroundPreview(savedBackground)
+  }
+  
+  // 点击预览区域触发文件选择
+  backgroundPreview.addEventListener('click', () => {
+    backgroundInput.click()
+  })
+  
+  // 处理文件选择
+  backgroundInput.addEventListener('change', (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const imageDataUrl = event.target.result
+      applyBackgroundImage(imageDataUrl)
+      updateBackgroundPreview(imageDataUrl)
+      localStorage.setItem('customBackground', imageDataUrl)
+    }
+    reader.readAsDataURL(file)
+  })
+  
+  // 移除背景图片
+  removeBackgroundBtn.addEventListener('click', () => {
+    removeBackgroundImage()
+  })
+}
+
+// 初始化背景遮罩透明度控制
+function initBackgroundOpacity() {
+  const opacitySlider = document.getElementById('bg-opacity-slider')
+  const opacityValue = document.getElementById('opacity-value')
+  
+  if (!opacitySlider || !opacityValue) {
+    return
+  }
+  
+  // 从本地存储加载保存的透明度值
+  const savedOpacity = localStorage.getItem('backgroundOpacity') || '0.8'
+  opacitySlider.value = savedOpacity
+  opacityValue.textContent = savedOpacity
+  
+  // 应用保存的透明度
+  updateBackgroundOpacity(parseFloat(savedOpacity))
+  
+  // 监听滑块变化事件
+  opacitySlider.addEventListener('input', (e) => {
+    const opacity = parseFloat(e.target.value)
+    opacityValue.textContent = opacity.toFixed(1)
+    updateBackgroundOpacity(opacity)
+    localStorage.setItem('backgroundOpacity', opacity.toFixed(1))
+  })
+}
+
+// 更新聊天背景遮罩透明度
+function updateBackgroundOpacity(opacity) {
+  const chatHeader = document.querySelector('.chat-header')
+  const chatMessagesBg = document.querySelector('.chat-messages-bg')
+  const chatInputArea = document.querySelector('.chat-input-area')
+  
+  // 检查是否为深色模式
+  const isDarkMode = document.body.classList.contains('dark-mode')
+  
+  if (chatHeader) {
+    if (isDarkMode) {
+      chatHeader.style.background = `rgba(30, 30, 30, ${opacity})`
+    } else {
+      chatHeader.style.background = `rgba(255, 255, 255, ${opacity})`
+    }
+  }
+  
+  if (chatMessagesBg) {
+    if (isDarkMode) {
+      chatMessagesBg.style.background = `linear-gradient(135deg, rgba(30, 30, 30, ${opacity * 0.625}) 0%, rgba(40, 40, 40, ${opacity * 0.625}) 100%)`
+    } else {
+      chatMessagesBg.style.background = `linear-gradient(135deg, rgba(255, 255, 255, ${opacity}) 0%, rgba(240, 240, 240, ${opacity}) 100%)`
+    }
+  }
+  
+  if (chatInputArea) {
+    if (isDarkMode) {
+      chatInputArea.style.background = `rgba(30, 30, 30, ${opacity})`
+    } else {
+      chatInputArea.style.background = `rgba(255, 255, 255, ${opacity})`
+    }
+  }
+}
+
+// 应用背景图片
+function applyBackgroundImage(imageDataUrl) {
+  // 确保毛玻璃效果始终存在
+  document.body.style.backgroundImage = `url('${imageDataUrl}')`
+  document.body.style.backgroundSize = 'cover'
+  document.body.style.backgroundPosition = 'center'
+  document.body.style.backgroundRepeat = 'no-repeat'
+  document.body.style.backgroundAttachment = 'fixed'
+  
+  // 确保毛玻璃效果始终应用
+  const sidebar = document.querySelector('.sidebar')
+  const chatHeader = document.querySelector('.chat-header')
+  const chatInputArea = document.querySelector('.chat-input-area')
+  
+  if (sidebar) {
+    sidebar.style.backdropFilter = 'blur(20px) saturate(120%)'
+    sidebar.style.webkitBackdropFilter = 'blur(20px) saturate(120%)'
+  }
+  if (chatHeader) {
+    chatHeader.style.backdropFilter = 'blur(20px) saturate(120%)'
+    chatHeader.style.webkitBackdropFilter = 'blur(20px) saturate(120%)'
+  }
+  if (chatInputArea) {
+    chatInputArea.style.backdropFilter = 'blur(20px) saturate(120%)'
+    chatInputArea.style.webkitBackdropFilter = 'blur(20px) saturate(120%)'
+  }
+}
+
+// 更新背景预览
+function updateBackgroundPreview(imageDataUrl) {
+  const backgroundPreview = document.getElementById('background-preview')
+  if (!backgroundPreview) return
+  
+  let previewImg = backgroundPreview.querySelector('img')
+  if (!previewImg) {
+    previewImg = document.createElement('img')
+    backgroundPreview.appendChild(previewImg)
+  }
+  
+  previewImg.src = imageDataUrl
+  backgroundPreview.classList.add('has-image')
+}
+
+// 移除背景图片
+function removeBackgroundImage() {
+  document.body.style.backgroundImage = ''
+  document.body.style.backgroundSize = ''
+  document.body.style.backgroundPosition = ''
+  document.body.style.backgroundRepeat = ''
+  document.body.style.backgroundAttachment = ''
+  
+  const backgroundPreview = document.getElementById('background-preview')
+  if (backgroundPreview) {
+    const previewImg = backgroundPreview.querySelector('img')
+    if (previewImg) {
+      previewImg.remove()
+    }
+    backgroundPreview.classList.remove('has-image')
+  }
+  
+  localStorage.removeItem('customBackground')
 }
 
 // 切换主题函数
@@ -1622,6 +1858,10 @@ function toggleTheme(mode) {
   
   // 更新标题栏样式，确保主题正确应用
   updateTitleBarStyleAfterThemeChange()
+  
+  // 重新应用背景遮罩透明度，解决主题切换时的残留问题
+  const savedOpacity = parseFloat(localStorage.getItem('backgroundOpacity') || '0.8')
+  updateBackgroundOpacity(savedOpacity)
 }
 
 // 防止鼠标滚轮缩放

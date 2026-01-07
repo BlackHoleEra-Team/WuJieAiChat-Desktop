@@ -86,8 +86,88 @@
     <!-- 主内容区域 -->
     <div class="main-content">
       <div class="content-area" id="chat-content">
-        <h1>聊天</h1>
-        <p>欢迎使用无界AI聊天 - 聊天功能</p>
+        <!-- 聊天头部 -->
+        <div class="chat-header">
+          <div class="chat-avatar">
+            <img src="images/app-icon.png" alt="聊天对象" width="40" height="40">
+          </div>
+          <div class="chat-info">
+            <div class="chat-name">DeepSeek</div>
+            <div class="chat-status online">在线</div>
+          </div>
+          <div class="chat-actions">
+            <!-- 暂时移除所有操作按钮 -->
+          </div>
+        </div>
+        
+        <!-- 聊天消息区域 -->
+        <div class="chat-messages-container">
+          <div class="chat-messages-bg"></div>
+          <div class="chat-messages" id="chat-messages">
+            <!-- 系统消息 -->
+            <div class="message system-message">
+              <div class="message-content">
+                <p>今天 14:30</p>
+              </div>
+            </div>
+            
+            <!-- AI 消息 -->
+            <div class="message ai-message">
+              <div class="message-avatar">
+                <img src="images/app-icon.png" alt="AI" width="32" height="32">
+              </div>
+              <div class="message-content">
+                <p>你好！我是 DeepSeek，很高兴为你提供帮助。</p>
+                <div class="message-time">14:31</div>
+              </div>
+            </div>
+            
+            <!-- 用户消息 -->
+            <div class="message user-message">
+              <div class="message-content">
+                <p>你好！我想了解一下如何使用这个聊天应用。</p>
+                <div class="message-time">14:32</div>
+              </div>
+              <div class="message-avatar">
+                <img src="images/app-icon.png" alt="我" width="32" height="32">
+              </div>
+            </div>
+            
+            <!-- AI 消息 -->
+            <div class="message ai-message">
+              <div class="message-avatar">
+                <img src="images/app-icon.png" alt="AI" width="32" height="32">
+              </div>
+              <div class="message-content">
+                <p>使用方法很简单！你只需要在下方输入框中输入你的问题或消息，然后点击发送按钮或者按 Enter 键发送即可。</p>
+                <p>我支持多种功能，包括：</p>
+                <ul>
+                  <li>自然语言对话</li>
+                  <li>问题解答</li>
+                  <li>信息查询</li>
+                  <li>创意写作</li>
+                  <li>代码帮助</li>
+                </ul>
+                <p>你可以随时开始提问！</p>
+                <div class="message-time">14:33</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 消息输入区域 -->
+        <div class="chat-input-area">
+          <!-- 移除了工具按钮栏 -->
+          <div class="input-container">
+            <textarea class="message-input" id="message-input" placeholder="输入消息..." rows="1"></textarea>
+            <button class="send-btn" id="send-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
       <div class="content-area" id="contacts-content" style="display: none;">
         <div class="contacts-container">
@@ -305,6 +385,28 @@
                     </div>
                   </div>
                 </div>
+                <div class="chat-setting-item">
+                  <div class="setting-label">背景图片</div>
+                  <div class="background-upload-section">
+                    <div class="current-background">
+                      <div class="background-preview" id="background-preview">
+                        <span class="preview-text">点击上传背景图片</span>
+                      </div>
+                    </div>
+                    <div class="background-controls">
+                      <label class="btn btn-primary" for="background-input">上传图片</label>
+                      <input type="file" id="background-input" accept="image/*" class="hidden-file-input">
+                      <button class="btn btn-secondary" id="remove-background-btn">移除背景</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="chat-setting-item">
+                  <div class="setting-label">聊天背景遮罩透明度</div>
+                  <div class="opacity-control">
+                    <input type="range" id="bg-opacity-slider" min="0.1" max="1" step="0.1" value="0.8">
+                    <span id="opacity-value">0.8</span>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -437,5 +539,78 @@
   </div>
   
   <script src="js/titlebar.js"></script>
+  <script>
+    // 聊天功能实现
+    document.addEventListener('DOMContentLoaded', function() {
+      const messageInput = document.getElementById('message-input');
+      const sendBtn = document.getElementById('send-btn');
+      const chatMessages = document.getElementById('chat-messages');
+      
+      // 允许用户手动调整输入框高度
+      // 移除了自动调整高度的功能，改为使用CSS resize属性
+      
+      // 发送消息
+      function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+        
+        // 创建用户消息元素
+        const userMessage = document.createElement('div');
+        userMessage.className = 'message user-message';
+        userMessage.innerHTML = `
+          <div class="message-content">
+            <p>${message}</p>
+            <div class="message-time">${getCurrentTime()}</div>
+          </div>
+          <div class="message-avatar">
+            <img src="images/app-icon.png" alt="我" width="32" height="32">
+          </div>
+        `;
+        
+        chatMessages.appendChild(userMessage);
+        messageInput.value = '';
+        // 保留用户手动调整的高度，仅在需要时重置
+        messageInput.style.height = 'auto';
+        messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+        
+        // 滚动到底部
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // 模拟 AI 回复
+        setTimeout(() => {
+          const aiMessage = document.createElement('div');
+          aiMessage.className = 'message ai-message';
+          aiMessage.innerHTML = `
+            <div class="message-avatar">
+              <img src="images/app-icon.png" alt="AI" width="32" height="32">
+            </div>
+            <div class="message-content">
+              <p>这是一条模拟的 AI 回复。你发送的消息是：${message}</p>
+              <div class="message-time">${getCurrentTime()}</div>
+            </div>
+          `;
+          chatMessages.appendChild(aiMessage);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 1000);
+      }
+      
+      // 获取当前时间
+      function getCurrentTime() {
+        const now = new Date();
+        return now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      }
+      
+      // 发送按钮点击事件
+      sendBtn.addEventListener('click', sendMessage);
+      
+      // 回车键发送消息（Ctrl+Enter 换行）
+      messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.ctrlKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+    });
+  </script>
 </body>
 </html>
