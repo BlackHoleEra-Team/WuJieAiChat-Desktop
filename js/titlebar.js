@@ -273,6 +273,18 @@ function initSidebarTabs() {
       targetContent.style.opacity = '1'
       targetContent.style.transform = 'translateX(0) scale(1)'
       targetContent.style.visibility = 'visible'
+      
+      // 当切换到聊天标签页时，检查当前是否有选中的联系人，如果有，更新聊天标题
+      if (targetTab === 'chat') {
+        const chatHeader = document.querySelector('.chat-header');
+        const contactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
+        if (contactId) {
+          const contact = contacts.find(c => c.id === contactId);
+          if (contact) {
+            updateChatHeader(contact);
+          }
+        }
+      }
       return
     }
     
@@ -350,24 +362,318 @@ function initSidebarTabs() {
     targetContent.classList.add(animationClass)
     
     // 动画结束后移除动画类和重置样式
-    currentAnimationTimer = setTimeout(() => {
-      // 移除动画类
-      targetContent.classList.remove(animationClass)
-      // 重置所有动画相关样式
-      targetContent.style.transform = ''
-      targetContent.style.transformOrigin = ''
-      // 恢复原始transition值
-      targetContent.style.transition = originalTransition
-      // 重置其他可能的动画相关属性
-      targetContent.style.opacity = ''
-      targetContent.style.visibility = ''
-      // 确保动画定时器被清除
-      currentAnimationTimer = null
-    }, 600) // 等待600ms，与动画持续时间一致
+  currentAnimationTimer = setTimeout(() => {
+    // 移除动画类
+    targetContent.classList.remove(animationClass)
+    // 重置所有动画相关样式
+    targetContent.style.transform = ''
+    targetContent.style.transformOrigin = ''
+    // 恢复原始transition值
+    targetContent.style.transition = originalTransition
+    // 重置其他可能的动画相关属性
+    targetContent.style.opacity = ''
+    targetContent.style.visibility = ''
+    // 确保动画定时器被清除
+    currentAnimationTimer = null
+    
+    // 当切换到聊天标签页时，检查当前是否有选中的联系人，如果有，更新聊天标题
+    if (targetTab === 'chat') {
+      const chatHeader = document.querySelector('.chat-header');
+      const contactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
+      if (contactId) {
+        const contact = contacts.find(c => c.id === contactId);
+        if (contact) {
+          updateChatHeader(contact);
+        }
+      }
+    }
+  }, 600) // 等待600ms，与动画持续时间一致
   }
   
   // 默认激活聊天标签页 - 使用立即模式避免动画延迟
   switchTab('chat', true)
+}
+
+// 侧边栏聊天选项卡悬停弹窗功能
+document.addEventListener('DOMContentLoaded', function() {
+  const chatTab = document.querySelector('.sidebar-tab[data-tab="chat"]');
+  const popup = chatTab.querySelector('.chat-tab-popup');
+  
+  // 模拟联系人数据
+  const contactsData = [
+    {
+      id: 1,
+      name: "DeepSeek",
+      avatar: "images/app-icon.png",
+      lastMessage: "你好，有什么可以帮助你的吗？",
+      timestamp: "19:10",
+      unread: 0
+    },
+    {
+      id: 2,
+      name: "通义千问",
+      avatar: "images/app-icon.png",
+      lastMessage: "今天天气不错呢！",
+      timestamp: "昨天",
+      unread: 3
+    },
+    {
+      id: 3,
+      name: "Claude",
+      avatar: "images/app-icon.png",
+      lastMessage: "我是一个AI助手。",
+      timestamp: "周六",
+      unread: 0
+    },
+    {
+      id: 4,
+      name: "GPT-4",
+      avatar: "images/app-icon.png",
+      lastMessage: "让我们一起解决问题吧！",
+      timestamp: "周五",
+      unread: 12
+    },
+    {
+      id: 5,
+      name: "Gemini",
+      avatar: "images/app-icon.png",
+      lastMessage: "这是一个很棒的想法！",
+      timestamp: "周四",
+      unread: 0
+    },
+    {
+      id: 6,
+      name: "Llama",
+      avatar: "images/app-icon.png",
+      lastMessage: "正在处理您的请求...",
+      timestamp: "周三",
+      unread: 0
+    }
+  ];
+  
+  // 渲染联系人列表
+  function renderContacts() {
+    // 清空现有内容
+    popup.innerHTML = '';
+    
+    // 创建联系人列表
+    contactsData.forEach(function(contact) {
+      const contactItem = document.createElement('div');
+      contactItem.className = 'chat-contact-item';
+      
+      // 构建未读消息数的HTML
+      let unreadBadge = '';
+      if (contact.unread > 0) {
+        unreadBadge = `<span class="unread-count">${contact.unread}</span>`;
+      }
+      
+      contactItem.innerHTML = `
+        <div class="contact-avatar">
+          <img src="${contact.avatar}" alt="${contact.name}">
+        </div>
+        <div class="contact-info">
+          <div class="contact-name">${contact.name} ${unreadBadge}</div>
+          <div class="contact-preview">
+            <span class="last-message">${contact.lastMessage}</span>
+            <span class="timestamp">${contact.timestamp}</span>
+          </div>
+        </div>
+      `;
+      
+      // 添加点击事件
+      contactItem.addEventListener('click', function() {
+        // 切换到对应的聊天
+        switchToChat(contact);
+      });
+      
+      popup.appendChild(contactItem);
+    });
+  }
+  
+  // 初始化联系人列表
+  renderContacts();
+  
+  // 添加鼠标悬停事件
+  chatTab.addEventListener('mouseenter', function() {
+    // 显示弹窗
+    showPopup();
+  });
+  
+  // 鼠标离开聊天tab时的处理
+  chatTab.addEventListener('mouseleave', function(e) {
+    // 检查鼠标是否移到了popup上
+    setTimeout(() => {
+      if (!popup.matches(':hover')) {
+        hidePopup();
+      }
+    }, 100);
+  });
+  
+  // 鼠标进入popup时保持显示
+  popup.addEventListener('mouseenter', function() {
+    showPopup();
+  });
+  
+  // 鼠标离开popup时隐藏
+  popup.addEventListener('mouseleave', function() {
+    hidePopup();
+  });
+  
+  // 显示弹窗的函数
+  function showPopup() {
+    popup.classList.add('show');
+  }
+  
+  // 隐藏弹窗的函数
+  function hidePopup() {
+    popup.classList.remove('show');
+  }
+});
+
+// 切换到指定联系人的聊天
+// 联系人聊天记录数据
+const chatRecords = {
+  'DeepSeek': [
+    {
+      type: 'system',
+      content: '今天 14:30'
+    },
+    {
+      type: 'ai',
+      content: '你好！我是 DeepSeek，很高兴为你提供帮助。',
+      time: '14:31',
+      avatar: 'images/app-icon.png'
+    },
+    {
+      type: 'user',
+      content: '你好！我想了解一下如何使用这个聊天应用。',
+      time: '14:32',
+      avatar: 'images/app-icon.png'
+    }
+  ],
+  '阿里云百炼': [
+    {
+      type: 'system',
+      content: '昨天 10:00'
+    },
+    {
+      type: 'ai',
+      content: '欢迎使用阿里云百炼服务，有什么可以帮助你的吗？',
+      time: '10:01',
+      avatar: 'images/app-icon.png'
+    }
+  ],
+  'Kimi': [
+    {
+      type: 'system',
+      content: '周一 16:45'
+    },
+    {
+      type: 'ai',
+      content: '你好，我是 Kimi，有什么想聊的吗？',
+      time: '16:46',
+      avatar: 'images/app-icon.png'
+    }
+  ]
+};
+
+// 加载聊天记录的函数
+function loadChatHistory(contactName) {
+  const chatMessagesContainer = document.getElementById('chat-messages');
+  if (!chatMessagesContainer) return;
+  
+  // 清空现有聊天记录
+  chatMessagesContainer.innerHTML = '';
+  
+  // 获取该联系人的聊天记录
+  const messages = chatRecords[contactName] || [];
+  
+  // 渲染聊天记录
+  messages.forEach(message => {
+    let messageHTML;
+    
+    if (message.type === 'system') {
+      messageHTML = `
+        <div class="message system-message">
+          <div class="message-content">
+            <p>${message.content}</p>
+          </div>
+        </div>
+      `;
+    } else if (message.type === 'ai') {
+      messageHTML = `
+        <div class="message ai-message">
+          <div class="message-avatar">
+            <img src="${message.avatar || 'images/app-icon.png'}" alt="AI" width="32" height="32">
+          </div>
+          <div class="message-content">
+            <p>${message.content}</p>
+            <div class="message-time">${message.time}</div>
+          </div>
+        </div>
+      `;
+    } else if (message.type === 'user') {
+      messageHTML = `
+        <div class="message user-message">
+          <div class="message-content">
+            <p>${message.content}</p>
+            <div class="message-time">${message.time}</div>
+          </div>
+          <div class="message-avatar">
+            <img src="${message.avatar || 'images/app-icon.png'}" alt="我" width="32" height="32">
+          </div>
+        </div>
+      `;
+    }
+    
+    if (messageHTML) {
+      chatMessagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+    }
+  });
+  
+  // 滚动到底部
+  chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+}
+
+function switchToChat(contact) {
+  console.log(`切换到与 ${contact.name} 的聊天`);
+  
+  // 更新主聊天区域的头部信息
+  updateChatHeader(contact);
+  
+  // 加载该联系人的聊天记录
+  loadChatHistory(contact.name);
+  
+  // 隐藏弹窗（使用class而不是直接修改style，避免覆盖CSS:hover样式）
+  const popup = document.querySelector('.chat-contacts-popup');
+  if (popup) {
+    // 移除任何内联样式，让CSS:hover样式正常工作
+    popup.removeAttribute('style');
+    // 弹窗会自动关闭，因为鼠标离开了触发区域
+  }
+}
+
+// 更新主聊天区域头部信息的函数
+function updateChatHeader(contact) {
+  // 查找聊天头部元素
+  const chatNameElement = document.querySelector('.chat-name');
+  const chatHeader = document.querySelector('.chat-header');
+  if (chatNameElement) {
+    chatNameElement.textContent = contact.name || contact.nickname;
+  }
+  
+  // 更新头像
+  const chatAvatarImg = document.querySelector('.chat-header .chat-avatar img');
+  if (chatAvatarImg) {
+    chatAvatarImg.src = contact.avatar;
+  }
+  
+  // 保存当前联系人ID到聊天头部
+  if (chatHeader && contact.id) {
+    chatHeader.setAttribute('data-contact-id', contact.id);
+  }
+  
+  console.log(`聊天头部已更新为: ${contact.name || contact.nickname}`);
 }
 
 // 联系人页面功能
@@ -993,6 +1299,56 @@ function initSettingsPage() {
   
   // 模式选择功能 - 实现深浅色切换
   const modeItems = document.querySelectorAll('.mode-item')
+  
+  // 清除数据功能
+  function initClearDataFunctions() {
+    // 获取清除数据按钮
+    const clearAllDataBtn = document.getElementById('clear-all-data-btn')
+    const clearContactsBtn = document.getElementById('clear-contacts-btn')
+    const clearUserDataBtn = document.getElementById('clear-user-data-btn')
+    
+    // 清除全部数据
+    if (clearAllDataBtn) {
+      clearAllDataBtn.addEventListener('click', () => {
+        if (confirm('确定要清除所有数据吗？此操作不可逆！')) {
+          // 清除所有localStorage数据
+          localStorage.clear()
+          // 重新加载页面
+          location.reload()
+        }
+      })
+    }
+    
+    // 清除联系人数据
+    if (clearContactsBtn) {
+      clearContactsBtn.addEventListener('click', () => {
+        if (confirm('确定要清除联系人数据吗？此操作不可逆！')) {
+          // 清除联系人数据
+          localStorage.removeItem('contacts')
+          // 重新加载页面
+          location.reload()
+        }
+      })
+    }
+    
+    // 清除用户数据
+    if (clearUserDataBtn) {
+      clearUserDataBtn.addEventListener('click', () => {
+        if (confirm('确定要清除用户数据吗？此操作不可逆！')) {
+          // 清除用户数据
+          localStorage.removeItem('userData')
+          localStorage.removeItem('pageAnimationType')
+          localStorage.removeItem('backgroundType')
+          localStorage.removeItem('theme')
+          // 重新加载页面
+          location.reload()
+        }
+      })
+    }
+  }
+  
+  // 初始化清除数据功能
+  initClearDataFunctions()
   modeItems.forEach(item => {
     item.addEventListener('click', () => {
       // 移除所有模式的激活状态
@@ -1872,6 +2228,71 @@ document.addEventListener('wheel', (e) => {
   }
 }, { passive: false })
 
+// 初始化聊天联系人点击事件
+function initChatContactsClick() {
+  // 为所有联系人项添加点击事件
+  document.addEventListener('click', function(e) {
+    const contactItem = e.target.closest('.contact-item');
+    if (contactItem) {
+      // 阻止事件冒泡，防止弹窗关闭
+      e.stopPropagation();
+      
+      // 获取联系人ID
+      const contactId = contactItem.dataset.id;
+      if (!contactId) return;
+      
+      // 检查当前是否已经在聊天页面
+      const currentActiveContent = document.querySelector('.content-area[style*="display: block"]');
+      if (currentActiveContent && currentActiveContent.id === 'chat-content') {
+        // 已经在聊天页面，直接切换联系人
+        switchToContactChat(contactId);
+      } else {
+        // 不在聊天页面，先切换到聊天页面，然后切换联系人
+        // 直接修改DOM来切换页面，而不是调用switchTab函数
+        
+        // 移除所有标签页的激活状态
+        document.querySelectorAll('.sidebar-tab').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        
+        // 激活聊天标签页
+        const chatTab = document.querySelector('.sidebar-tab[data-tab="chat"]');
+        if (chatTab) {
+          chatTab.classList.add('active');
+        }
+        
+        // 隐藏所有内容区域
+        document.querySelectorAll('.content-area').forEach(area => {
+          area.style.display = 'none';
+        });
+        
+        // 显示聊天内容区域
+        const chatContent = document.getElementById('chat-content');
+        if (chatContent) {
+          chatContent.style.display = 'flex';
+          chatContent.style.opacity = '1';
+          chatContent.style.transform = 'translateX(0) scale(1)';
+          chatContent.style.visibility = 'visible';
+        }
+        
+        // 更新窗口标题
+        document.title = '无界 - 聊天';
+        
+        // 使用setTimeout确保页面切换完成后再切换联系人
+        setTimeout(() => {
+          switchToContactChat(contactId);
+        }, 100);
+      }
+    }
+  });
+}
+
+// 监听DOM加载完成事件
+window.addEventListener('DOMContentLoaded', function() {
+  // 初始化聊天联系人弹窗点击事件
+  initChatContactsClick();
+});
+
 // 监听缩放变化并立即重置 - 修复缩放检测
 document.addEventListener('DOMContentLoaded', () => {
   const checkZoom = () => {
@@ -1897,3 +2318,951 @@ document.addEventListener('DOMContentLoaded', () => {
   // 监听窗口大小变化，间接检测缩放变化
   window.addEventListener('resize', checkZoom)
 })
+
+// 模型数据配置
+const MODEL_CONFIGS = {
+  DeepSeek: {
+    models: [
+      { id: 'deepseek-chat', name: 'deepseek-chat', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'deepseek-reasoner', name: 'deepseek-reasoner', supportsWebSearch: false, supportsDeepThink: true }
+    ],
+    hint: 'deepseek-reasoner模型强制打开深度思考功能'
+  },
+  '阿里云百炼': {
+    models: [
+      // 支持联网搜索，不支持深度思考
+      { id: 'qwen3-max', name: 'qwen3-max', supportsWebSearch: true, supportsDeepThink: false },
+      
+      // 支持联网搜索和深度思考
+      { id: 'qwen3-max-preview', name: 'qwen3-max-preview', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'qwen-plus', name: 'qwen-plus', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'qwen-plus-latest', name: 'qwen-plus-latest', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'qwen-plus-2025-07-14', name: 'qwen-plus-2025-07-14', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'qwen-flash', name: 'qwen-flash', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'qwen-flash-2025-07-28', name: 'qwen-flash-2025-07-28', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'qwen-turbo', name: 'qwen-turbo', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'qwen-turbo-latest', name: 'qwen-turbo-latest', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'qwen-turbo-2025-07-15', name: 'qwen-turbo-2025-07-15', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'qwq-plus', name: 'qwq-plus', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'deepseek-v3.2', name: 'deepseek-v3.2', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'deepseek-v3.2-exp', name: 'deepseek-v3.2-exp', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'deepseek-v3.1', name: 'deepseek-v3.1', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'deepseek-r1-0528', name: 'deepseek-r1-0528', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'deepseek-r1', name: 'deepseek-r1', supportsWebSearch: true, supportsDeepThink: true },
+      
+      // 仅支持深度思考
+      { id: 'qwen3-next-80b-a3b-thinking', name: 'qwen3-next-80b-a3b-thinking', supportsWebSearch: false, supportsDeepThink: true },
+      { id: 'qwen3-235b-a22b-thinking-2507', name: 'qwen3-235b-a22b-thinking-2507', supportsWebSearch: false, supportsDeepThink: true },
+      { id: 'qwen3-30b-a3b-thinking-2507', name: 'qwen3-30b-a3b-thinking-2507', supportsWebSearch: false, supportsDeepThink: true },
+      
+      // 仅不支持深度思考
+      { id: 'qwen3-next-80b-a3b-instruct', name: 'qwen3-next-80b-a3b-instruct', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'qwen3-235b-a22b-instruct-2507', name: 'qwen3-235b-a22b-instruct-2507', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'qwen3-30b-a3b-instruct-2507', name: 'qwen3-30b-a3b-instruct-2507', supportsWebSearch: false, supportsDeepThink: false },
+      
+      // 同时支持深度思考和非思考模式
+      { id: 'qwen3-235b-a22b', name: 'qwen3-235b-a22b', supportsWebSearch: false, supportsDeepThink: true },
+      { id: 'qwen3-32b', name: 'qwen3-32b', supportsWebSearch: false, supportsDeepThink: true },
+      { id: 'qwen3-30b-a3b', name: 'qwen3-30b-a3b', supportsWebSearch: false, supportsDeepThink: true },
+      
+      // 其他不支持功能
+      { id: 'qwen3-14b', name: 'qwen3-14b', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'qwen3-8b', name: 'qwen3-8b', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'qwen3-4b', name: 'qwen3-4b', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'qwen3-1.7b', name: 'qwen3-1.7b', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'qwen3-0.6b', name: 'qwen3-0.6b', supportsWebSearch: false, supportsDeepThink: false }
+    ]
+  },
+  Kimi: {
+    models: [
+      { id: 'kimi-k2-0905-preview', name: 'kimi-k2-0905-preview', supportsWebSearch: true, supportsDeepThink: false },
+      { id: 'kimi-k2-0711-preview', name: 'kimi-k2-0711-preview', supportsWebSearch: true, supportsDeepThink: false },
+      { id: 'kimi-k2-turbo-preview', name: 'kimi-k2-turbo-preview', supportsWebSearch: true, supportsDeepThink: false },
+      { id: 'kimi-k2-thinking', name: 'kimi-k2-thinking', supportsWebSearch: false, supportsDeepThink: true },
+      { id: 'kimi-k2-thinking-turbo', name: 'kimi-k2-thinking-turbo', supportsWebSearch: false, supportsDeepThink: true },
+      { id: 'moonshot-v1-8k', name: 'moonshot-v1-8k', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'moonshot-v1-32k', name: 'moonshot-v1-32k', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'moonshot-vl-128k', name: 'moonshot-vl-128k', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'moonshot-v1-8k-vision-preview', name: 'moonshot-v1-8k-vision-preview', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'moonshot-v1-32k-vision-preview', name: 'moonshot-v1-32k-vision-preview', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'moonshot-v1-128k-vision-preview', name: 'moonshot-v1-128k-vision-preview', supportsWebSearch: false, supportsDeepThink: false }
+    ]
+  }
+};
+
+// 联系人数据管理
+let contacts = [];
+let currentContactId = null;
+
+// 更新悬浮弹窗联系人列表
+function updatePopupContacts() {
+  const popupContent = document.querySelector('.chat-contacts-popup .popup-content');
+  if (!popupContent) return;
+  
+  if (contacts.length === 0) {
+    popupContent.innerHTML = `
+      <div class="popup-empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="7" r="4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p>暂无联系人</p>
+        <button class="btn btn-small btn-primary" id="popup-add-contact-btn">
+          + 添加联系人
+        </button>
+      </div>
+    `;
+    
+    // 绑定添加联系人按钮事件
+    const popupAddBtn = document.getElementById('popup-add-contact-btn');
+    if (popupAddBtn) {
+      popupAddBtn.addEventListener('click', () => {
+        document.getElementById('create-contact-modal').style.display = 'block';
+      });
+    }
+  } else {
+    // 渲染联系人列表
+    let contactsHTML = '';
+    contacts.forEach(contact => {
+      contactsHTML += `
+        <div class="contact-item" data-id="${contact.id}">
+          <div class="contact-avatar">
+            <img src="${contact.avatar}" alt="${contact.nickname}" width="40" height="40">
+          </div>
+          <div class="contact-details">
+            <div class="contact-name">${contact.nickname}</div>
+            <div class="contact-last-msg">
+              <span class="msg-text">${contact.provider} · ${contact.model}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    popupContent.innerHTML = contactsHTML;
+    
+    // 绑定点击事件
+    popupContent.querySelectorAll('.contact-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const contactId = item.dataset.id;
+        const contact = contacts.find(c => c.id === contactId);
+        if (contact) {
+          switchToContactChat(contactId);
+        }
+      });
+    });
+  }
+}
+
+// 更新聊天页面状态
+function updateChatPage() {
+  const chatMessages = document.getElementById('chat-messages');
+  const messageInput = document.getElementById('message-input');
+  const sendBtn = document.getElementById('send-btn');
+  const chatInputArea = document.querySelector('.chat-input-area');
+  const noContactPrompt = document.getElementById('no-contact-chat-prompt');
+  
+  if (!chatMessages || !noContactPrompt) return;
+  
+  if (contacts.length === 0) {
+    // 显示无联系人提示
+    noContactPrompt.style.display = 'flex';
+    
+    // 清空聊天消息（除了提示）
+    const messages = chatMessages.querySelectorAll('.message');
+    messages.forEach(msg => {
+      if (msg !== noContactPrompt) {
+        msg.remove();
+      }
+    });
+    
+    // 禁用输入区域
+    if (messageInput) messageInput.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
+    if (chatInputArea) chatInputArea.classList.add('disabled');
+    
+    // 更新聊天头部
+    const chatName = document.querySelector('.chat-name');
+    const chatStatus = document.querySelector('.chat-status');
+    if (chatName) chatName.textContent = '选择联系人';
+    if (chatStatus) chatStatus.textContent = '请先创建联系人';
+  } else {
+    // 隐藏无联系人提示
+    noContactPrompt.style.display = 'none';
+    
+    // 启用输入区域
+    if (messageInput) messageInput.disabled = false;
+    if (sendBtn) sendBtn.disabled = false;
+    if (chatInputArea) chatInputArea.classList.remove('disabled');
+    
+    // 如果当前没有选中联系人，选择第一个
+    const currentContact = document.querySelector('.contact-item.active');
+    if (!currentContact && contacts.length > 0) {
+      switchToContactChat(contacts[0].id);
+    }
+  }
+}
+
+// 初始化创建联系人功能
+function initCreateContactModal() {
+  const createContactBtn = document.getElementById('create-contact-btn');
+  const createContactModal = document.getElementById('create-contact-modal');
+  const closeContactModalBtn = document.getElementById('close-contact-modal');
+  const cancelContactBtn = document.getElementById('cancel-contact-btn');
+  const saveContactBtn = document.getElementById('save-contact-btn');
+  const contactAvatarInput = document.getElementById('contact-avatar-input');
+  const contactAvatarPreview = document.getElementById('contact-avatar-preview');
+  const contactProviderSelect = document.getElementById('contact-provider');
+  const contactApikeySelect = document.getElementById('contact-apikey');
+  const contactModelSelect = document.getElementById('contact-model');
+  const contactModelCustom = document.getElementById('contact-model-custom');
+  const contactNicknameInput = document.getElementById('contact-nickname');
+  const contactSystemPrompt = document.getElementById('contact-system-prompt');
+  
+  // 开关元素
+  const roleplayToggle = document.getElementById('roleplay-toggle');
+  const websearchToggle = document.getElementById('websearch-toggle');
+  const deepthinkToggle = document.getElementById('deepthink-toggle');
+  const advancedToggle = document.getElementById('advanced-toggle');
+  
+  // 滑块元素
+  const topPSlider = document.getElementById('top-p-slider');
+  const temperatureSlider = document.getElementById('temperature-slider');
+  const thinkingbudgetSlider = document.getElementById('thinkingbudget-slider');
+  
+  // 开关初始化
+  [roleplayToggle, websearchToggle, deepthinkToggle, advancedToggle].forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      if (this === advancedToggle) {
+        const advancedOptions = document.getElementById('advanced-options');
+        advancedOptions.style.display = this.classList.contains('active') ? 'block' : 'none';
+      }
+    });
+  });
+  
+  // 滑块事件
+  topPSlider.addEventListener('input', function() {
+    document.getElementById('top-p-value').textContent = parseFloat(this.value).toFixed(4);
+  });
+  
+  temperatureSlider.addEventListener('input', function() {
+    document.getElementById('temperature-value').textContent = parseFloat(this.value).toFixed(4);
+  });
+  
+  thinkingbudgetSlider.addEventListener('input', function() {
+    document.getElementById('thinkingbudget-value').textContent = this.value;
+  });
+  
+  // 服务商选择变化
+  contactProviderSelect.addEventListener('change', function() {
+    updateApikeyOptions(this.value);
+    contactApikeySelect.disabled = !this.value;
+    contactModelSelect.disabled = true;
+    contactModelSelect.innerHTML = '<option value="">请先选择API-Key</option>';
+  });
+  
+  // API-Key 选择变化
+  contactApikeySelect.addEventListener('change', function() {
+    const provider = contactProviderSelect.value;
+    updateModelOptions(provider, this.value);
+    contactModelSelect.disabled = !this.value;
+  });
+  
+  // 头像上传
+  contactAvatarInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        contactAvatarPreview.querySelector('img').src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  
+  // 显示弹窗
+  createContactBtn.addEventListener('click', function() {
+    createContactModal.style.display = 'block';
+    document.getElementById('contact-modal-title').textContent = '创建联系人';
+    resetContactForm();
+  });
+  
+  // 绑定关闭按钮事件
+  closeContactModalBtn.addEventListener('click', closeContactModal);
+  cancelContactBtn.addEventListener('click', closeContactModal);
+  
+  // 点击外部关闭
+  window.addEventListener('click', function(e) {
+    if (e.target === createContactModal) {
+      closeContactModal();
+    }
+  });
+  
+  // 保存联系人
+  saveContactBtn.addEventListener('click', function() {
+    console.log('点击了保存联系人按钮');
+    if (!validateContactForm()) {
+      console.log('表单验证失败');
+      return;
+    }
+    
+    console.log('表单验证成功');
+    const contactData = collectContactData();
+    console.log('收集到的联系人数据:', contactData);
+    saveContact(contactData);
+  });
+}
+
+// 更新API-Key选项
+function updateApikeyOptions(provider) {
+  const apikeySelect = document.getElementById('contact-apikey');
+  const apikeyHint = document.getElementById('apikey-hint');
+  
+  apikeySelect.innerHTML = '<option value="">请选择API-Key</option>';
+  
+  if (!provider) {
+    apikeySelect.disabled = true;
+    apikeyHint.textContent = '请先选择服务商';
+    return;
+  }
+  
+  // 从本地存储获取该服务商的API密钥
+  const providerKeys = apiKeys.filter(key => key.platform === provider);
+  
+  if (providerKeys.length === 0) {
+    apikeySelect.innerHTML = '<option value="">暂无API-Key，请先添加</option>';
+    apikeyHint.textContent = '请先在API-Keys管理页面添加API密钥';
+    apikeySelect.disabled = false;
+  } else {
+    providerKeys.forEach(key => {
+      const option = document.createElement('option');
+      option.value = key.id;
+      option.textContent = key.name;
+      apikeySelect.appendChild(option);
+    });
+    apikeyHint.textContent = `找到 ${providerKeys.length} 个可用的API-Key`;
+    apikeySelect.disabled = false;
+  }
+}
+
+// 更新模型选项
+function updateModelOptions(provider, apikeyId) {
+  const modelSelect = document.getElementById('contact-model');
+  const modelCustom = document.getElementById('contact-model-custom');
+  const websearchHint = document.getElementById('websearch-hint');
+  const deepthinkHint = document.getElementById('deepthink-hint');
+  
+  modelSelect.innerHTML = '<option value="">请选择模型</option>';
+  modelCustom.style.display = 'none';
+  
+  if (!provider || !apikeyId) {
+    return;
+  }
+  
+  const providerConfig = MODEL_CONFIGS[provider];
+  if (!providerConfig) {
+    return;
+  }
+  
+  // 添加预设模型选项
+  providerConfig.models.forEach(model => {
+    const option = document.createElement('option');
+    option.value = model.id;
+    option.textContent = model.name;
+    option.dataset.supportsWebSearch = model.supportsWebSearch;
+    option.dataset.supportsDeepThink = model.supportsDeepThink;
+    modelSelect.appendChild(option);
+  });
+  
+  // 添加自定义模型选项
+  const customOption = document.createElement('option');
+  customOption.value = 'custom';
+  customOption.textContent = '自定义模型';
+  modelSelect.appendChild(customOption);
+  
+  // 模型选择变化事件
+  modelSelect.addEventListener('change', function() {
+    if (this.value === 'custom') {
+      modelCustom.style.display = 'block';
+      modelCustom.required = true;
+      modelCustom.focus();
+    } else {
+      modelCustom.style.display = 'none';
+      modelCustom.required = false;
+      
+      // 更新功能提示
+      const selectedOption = this.options[this.selectedIndex];
+      const supportsWebSearch = selectedOption.dataset.supportsWebSearch === 'true';
+      const supportsDeepThink = selectedOption.dataset.supportsDeepThink === 'true';
+      
+      if (supportsWebSearch) {
+        websearchHint.textContent = '该模型支持联网搜索功能';
+      } else {
+        websearchHint.textContent = '该模型疑似不支持此功能，可尝试开启';
+      }
+      
+      if (supportsDeepThink) {
+        deepthinkHint.textContent = '该模型支持深度思考功能';
+      } else {
+        deepthinkHint.textContent = '该模型疑似不支持此功能，可尝试开启';
+      }
+      
+      // 特殊处理 deepseek-reasoner 强制打开深度思考
+      if (provider === 'DeepSeek' && this.value === 'deepseek-reasoner') {
+        const deepthinkToggle = document.getElementById('deepthink-toggle');
+        deepthinkToggle.classList.add('active');
+        deepthinkHint.textContent = '该模型强制打开深度思考功能';
+      }
+    }
+  });
+}
+
+// 验证表单
+function validateContactForm() {
+  const provider = document.getElementById('contact-provider').value;
+  const apikey = document.getElementById('contact-apikey').value;
+  const model = document.getElementById('contact-model').value;
+  const modelCustom = document.getElementById('contact-model-custom').value;
+  const nickname = document.getElementById('contact-nickname').value.trim();
+  
+  let isValid = true;
+  
+  if (!provider) {
+    alert('请选择AI服务提供商');
+    isValid = false;
+  } else if (!apikey) {
+    alert('请选择API-Key');
+    isValid = false;
+  } else if (!model) {
+    alert('请选择模型或选择自定义模型');
+    isValid = false;
+  } else if (model === 'custom' && !modelCustom) {
+    alert('请输入自定义模型名称');
+    isValid = false;
+  } else if (!nickname) {
+    alert('请输入AI昵称');
+    isValid = false;
+  }
+  
+  return isValid;
+}
+
+// 收集表单数据
+function collectContactData() {
+  const provider = document.getElementById('contact-provider').value;
+  const apikeyId = document.getElementById('contact-apikey').value;
+  const model = document.getElementById('contact-model').value;
+  const modelCustom = document.getElementById('contact-model-custom').value;
+  const finalModel = model === 'custom' ? modelCustom : model;
+  const nickname = document.getElementById('contact-nickname').value.trim();
+  const systemPrompt = document.getElementById('contact-system-prompt').value.trim();
+  const avatar = document.getElementById('contact-avatar-preview').querySelector('img').src;
+  
+  // 获取选中的API密钥信息
+  const selectedApikey = apiKeys.find(key => key.id === apikeyId);
+  
+  // 获取功能开关状态
+  const roleplay = document.getElementById('roleplay-toggle').classList.contains('active');
+  const websearch = document.getElementById('websearch-toggle').classList.contains('active');
+  const deepthink = document.getElementById('deepthink-toggle').classList.contains('active');
+  const advancedEnabled = document.getElementById('advanced-toggle').classList.contains('active');
+  
+  // 获取高级参数
+  const topP = parseFloat(document.getElementById('top-p-slider').value);
+  const temperature = parseFloat(document.getElementById('temperature-slider').value);
+  const thinkingBudget = parseInt(document.getElementById('thinkingbudget-slider').value);
+  
+  return {
+    id: currentContactId || Date.now().toString(),
+    provider,
+    apikey: selectedApikey ? selectedApikey.key : '',
+    apikeyId,
+    model: finalModel,
+    nickname,
+    systemPrompt,
+    avatar,
+    roleplay,
+    websearch,
+    deepthink,
+    advancedEnabled,
+    advancedParams: advancedEnabled ? {
+      topP,
+      temperature,
+      thinkingBudget
+    } : null,
+    createdAt: new Date().toISOString(),
+    lastActive: null,
+    unreadCount: 0
+  };
+}
+
+// 重置表单
+function resetContactForm() {
+  document.getElementById('contact-form').reset();
+  
+  // 重置头像
+  document.getElementById('contact-avatar-preview').querySelector('img').src = 'images/app-icon.png';
+  
+  // 重置开关
+  [document.getElementById('roleplay-toggle'), 
+   document.getElementById('websearch-toggle'),
+   document.getElementById('deepthink-toggle'),
+   document.getElementById('advanced-toggle')].forEach(toggle => {
+    toggle.classList.remove('active');
+  });
+  
+  // 隐藏高级选项
+  document.getElementById('advanced-options').style.display = 'none';
+  
+  // 重置滑块值
+  document.getElementById('top-p-slider').value = 0.8000;
+  document.getElementById('temperature-slider').value = 0.7000;
+  document.getElementById('thinkingbudget-slider').value = 4000;
+  document.getElementById('top-p-value').textContent = '0.8000';
+  document.getElementById('temperature-value').textContent = '0.7000';
+  document.getElementById('thinkingbudget-value').textContent = '4000';
+  
+  // 重置提示
+  document.getElementById('apikey-hint').textContent = '请先选择服务商';
+  document.getElementById('websearch-hint').textContent = '该功能需要模型支持';
+  document.getElementById('deepthink-hint').textContent = '该功能需要模型支持';
+  
+  // 重置下拉框
+  document.getElementById('contact-apikey').innerHTML = '<option value="">请先选择服务商</option>';
+  document.getElementById('contact-apikey').disabled = true;
+  document.getElementById('contact-model').innerHTML = '<option value="">请先选择API-Key</option>';
+  document.getElementById('contact-model').disabled = true;
+  document.getElementById('contact-model-custom').style.display = 'none';
+}
+
+// 关闭联系人弹窗
+function closeContactModal() {
+  const createContactModal = document.getElementById('create-contact-modal');
+  if (createContactModal) {
+    createContactModal.style.display = 'none';
+  }
+  resetContactForm();
+  currentContactId = null;
+}
+
+// 保存联系人（加密存储）
+function saveContact(contactData) {
+  // 加密敏感数据
+  const encryptedContact = {
+    ...contactData,
+    apikey: CryptoJS.AES.encrypt(contactData.apikey, AES_CONFIG.key, {
+      iv: AES_CONFIG.iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7
+    }).toString()
+  };
+  
+  let isCurrentContactUpdated = false;
+  
+  if (currentContactId) {
+    // 更新现有联系人
+    const index = contacts.findIndex(c => c.id === currentContactId);
+    if (index !== -1) {
+      contacts[index] = encryptedContact;
+      // 检查是否更新的是当前正在聊天的联系人
+      const currentChatName = document.querySelector('.chat-name');
+      if (currentChatName && currentChatName.textContent === contacts[index].nickname) {
+        isCurrentContactUpdated = true;
+      }
+    }
+  } else {
+    // 添加新联系人
+    contacts.push(encryptedContact);
+  }
+  
+  // 保存到本地存储
+  saveContacts();
+  
+  // 重新渲染所有UI
+  renderContacts();
+  updatePopupContacts(); // 新增
+  updateChatPage(); // 新增
+  bindApiKeyEvents();
+  
+  // 如果更新的是当前正在聊天的联系人，更新聊天标题栏
+  if (isCurrentContactUpdated) {
+    const contact = contacts.find(c => c.id === currentContactId);
+    if (contact) {
+      const chatName = document.querySelector('.chat-name');
+      const chatAvatar = document.querySelector('.chat-avatar img');
+      if (chatName) chatName.textContent = contact.nickname;
+      if (chatAvatar) chatAvatar.src = contact.avatar;
+    }
+  }
+  
+  // 判断是创建还是更新联系人
+  const isUpdate = !!currentContactId;
+  
+  // 关闭弹窗
+  closeContactModal();
+  
+  // 显示成功提示
+  const infoBar = document.getElementById('success-info-bar');
+  const infoBarMessage = document.getElementById('info-bar-message');
+  if (infoBar && infoBarMessage) {
+    // 设置提示消息
+    infoBarMessage.textContent = isUpdate ? '联系人更新成功' : '联系人创建成功';
+    // 显示提示
+    infoBar.style.display = 'flex';
+    // 3秒后自动隐藏
+    setTimeout(() => {
+      infoBar.style.display = 'none';
+    }, 3000);
+  }
+}
+
+// 解密联系人数据
+function decryptContact(contact) {
+  try {
+    const decrypted = CryptoJS.AES.decrypt(
+      contact.apikey,
+      AES_CONFIG.key,
+      {
+        iv: AES_CONFIG.iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      }
+    );
+    
+    return {
+      ...contact,
+      apikey: decrypted.toString(CryptoJS.enc.Utf8)
+    };
+  } catch (error) {
+    console.error('解密联系人数据失败:', error);
+    return contact;
+  }
+}
+
+// 从本地存储加载联系人
+function loadContacts() {
+  try {
+    const savedContacts = localStorage.getItem('contacts');
+    if (savedContacts) {
+      contacts = JSON.parse(savedContacts);
+    } else {
+      contacts = [];
+    }
+  } catch (error) {
+    console.error('加载联系人失败:', error);
+    contacts = [];
+  }
+  
+  // 更新UI
+  updatePopupContacts(); // 新增
+  updateChatPage(); // 新增
+}
+
+// 保存联系人到本地存储
+function saveContacts() {
+  try {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  } catch (error) {
+    console.error('保存联系人失败:', error);
+  }
+}
+
+// 渲染联系人列表
+function renderContacts() {
+  const contactsList = document.querySelector('.group-contacts');
+  const groupCount = document.querySelector('.group-count');
+  
+  if (!contactsList || !groupCount) {
+    return;
+  }
+  
+  if (contacts.length === 0) {
+    contactsList.className = 'group-contacts empty';
+    contactsList.innerHTML = `
+      <div class="empty-message">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="7" r="4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p>暂无联系人</p>
+        <p>点击上方"创建联系人"按钮添加新的AI助手</p>
+      </div>
+    `;
+    groupCount.textContent = '0';
+    return;
+  }
+  
+  contactsList.className = 'group-contacts';
+  contactsList.innerHTML = '';
+  
+  contacts.forEach(contact => {
+    const contactItem = createContactElement(contact);
+    contactsList.appendChild(contactItem);
+  });
+  
+  groupCount.textContent = contacts.length;
+}
+
+// 创建联系人元素
+function createContactElement(contact) {
+  const item = document.createElement('div');
+  item.className = 'contact-item';
+  item.dataset.id = contact.id;
+  
+  // 生成状态徽章
+  let statusBadge = '';
+  if (contact.unreadCount > 0) {
+    statusBadge = `<span class="unread-badge">${contact.unreadCount}</span>`;
+  }
+  
+  // 生成最后活跃时间
+  let lastActive = '从未聊天';
+  if (contact.lastActive) {
+    const lastActiveDate = new Date(contact.lastActive);
+    const now = new Date();
+    const diffMs = now - lastActiveDate;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 60) {
+      lastActive = `${diffMins}分钟前`;
+    } else if (diffHours < 24) {
+      lastActive = `${diffHours}小时前`;
+    } else {
+      lastActive = `${diffDays}天前`;
+    }
+  }
+  
+  item.innerHTML = `
+    <div class="contact-avatar">
+      <img src="${contact.avatar}" alt="${contact.nickname}" width="48" height="48">
+    </div>
+    <div class="contact-info">
+      <div class="contact-name">${contact.nickname} ${statusBadge}</div>
+      <div class="contact-status online">${contact.provider} · ${contact.model}</div>
+    </div>
+    <div class="contact-meta">
+      <div class="contact-last-active">${lastActive}</div>
+      <div class="contact-actions">
+        <button class="contact-action edit-contact" title="编辑">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.5"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5"/>
+          </svg>
+        </button>
+        <button class="contact-action delete-contact" title="删除">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="1.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `;
+  
+  // 添加点击事件
+  const chatBtn = item.querySelector('.contact-action:not(.edit-contact):not(.delete-contact)');
+  if (chatBtn) {
+    chatBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // 切换到聊天页面并加载该联系人
+      switchToContactChat(contact.id);
+    });
+  }
+  
+  // 编辑按钮
+  const editBtn = item.querySelector('.edit-contact');
+  editBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    editContact(contact.id);
+  });
+  
+  // 删除按钮
+  const deleteBtn = item.querySelector('.delete-contact');
+  deleteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteContact(contact.id);
+  });
+  
+  return item;
+}
+
+// 编辑联系人
+function editContact(id) {
+  const contact = contacts.find(c => c.id === id);
+  if (!contact) return;
+  
+  currentContactId = id;
+  
+  // 解密数据
+  const decryptedContact = decryptContact(contact);
+  
+  // 填充表单
+  const modal = document.getElementById('create-contact-modal');
+  modal.style.display = 'block';
+  document.getElementById('contact-modal-title').textContent = '编辑联系人';
+  
+  // 填充基础数据
+  document.getElementById('contact-provider').value = decryptedContact.provider;
+  updateApikeyOptions(decryptedContact.provider);
+  
+  // 设置API-Key（需要等待选项加载）
+  setTimeout(() => {
+    document.getElementById('contact-apikey').value = decryptedContact.apikeyId;
+    updateModelOptions(decryptedContact.provider, decryptedContact.apikeyId);
+    
+    // 设置模型
+    setTimeout(() => {
+      const modelSelect = document.getElementById('contact-model');
+      const providerConfig = MODEL_CONFIGS[decryptedContact.provider];
+      const isPresetModel = providerConfig?.models.some(m => m.id === decryptedContact.model);
+      
+      if (isPresetModel) {
+        modelSelect.value = decryptedContact.model;
+      } else {
+        modelSelect.value = 'custom';
+        document.getElementById('contact-model-custom').value = decryptedContact.model;
+        document.getElementById('contact-model-custom').style.display = 'block';
+      }
+      
+      document.getElementById('contact-nickname').value = decryptedContact.nickname;
+      document.getElementById('contact-system-prompt').value = decryptedContact.systemPrompt || '';
+      document.getElementById('contact-avatar-preview').querySelector('img').src = decryptedContact.avatar;
+      
+      // 设置开关
+      if (decryptedContact.roleplay) {
+        document.getElementById('roleplay-toggle').classList.add('active');
+      }
+      if (decryptedContact.websearch) {
+        document.getElementById('websearch-toggle').classList.add('active');
+      }
+      if (decryptedContact.deepthink) {
+        document.getElementById('deepthink-toggle').classList.add('active');
+      }
+      if (decryptedContact.advancedEnabled) {
+        document.getElementById('advanced-toggle').classList.add('active');
+        document.getElementById('advanced-options').style.display = 'block';
+        
+        // 设置高级参数
+        if (decryptedContact.advancedParams) {
+          document.getElementById('top-p-slider').value = decryptedContact.advancedParams.topP || 0.8000;
+          document.getElementById('temperature-slider').value = decryptedContact.advancedParams.temperature || 0.7000;
+          document.getElementById('thinkingbudget-slider').value = decryptedContact.advancedParams.thinkingBudget || 4000;
+          
+          document.getElementById('top-p-value').textContent = (decryptedContact.advancedParams.topP || 0.8000).toFixed(4);
+          document.getElementById('temperature-value').textContent = (decryptedContact.advancedParams.temperature || 0.7000).toFixed(4);
+          document.getElementById('thinkingbudget-value').textContent = decryptedContact.advancedParams.thinkingBudget || 4000;
+        }
+      }
+    }, 100);
+  }, 100);
+}
+
+// 删除联系人
+function deleteContact(id) {
+  if (!confirm('确定要删除这个联系人吗？此操作不可撤销。')) {
+    return;
+  }
+  
+  contacts = contacts.filter(c => c.id !== id);
+  saveContacts();
+  renderContacts();
+  updatePopupContacts(); // 新增
+  updateChatPage(); // 新增
+}
+
+// 切换到联系人聊天
+function switchToContactChat(contactId) {
+  const contact = contacts.find(c => c.id === contactId);
+  if (!contact) return;
+  
+  // 检查当前是否已经在聊天页面
+  const currentActiveContent = document.querySelector('.content-area[style*="display: block"]');
+  if (!currentActiveContent || currentActiveContent.id !== 'chat-content') {
+    // 不在聊天页面，先切换到聊天页面
+    // 移除所有标签页的激活状态
+    document.querySelectorAll('.sidebar-tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    
+    // 激活聊天标签页
+    const chatTab = document.querySelector('.sidebar-tab[data-tab="chat"]');
+    if (chatTab) {
+      chatTab.classList.add('active');
+    }
+    
+    // 隐藏所有内容区域
+    document.querySelectorAll('.content-area').forEach(area => {
+      area.style.display = 'none';
+    });
+    
+    // 显示聊天内容区域
+    const chatContent = document.getElementById('chat-content');
+    if (chatContent) {
+      chatContent.style.display = 'flex';
+    }
+  }
+  
+  // 更新聊天头部
+  const chatName = document.querySelector('.chat-name');
+  const chatAvatar = document.querySelector('.chat-avatar img');
+  const chatHeader = document.querySelector('.chat-header');
+  
+  if (chatName) chatName.textContent = contact.nickname;
+  if (chatAvatar) chatAvatar.src = contact.avatar;
+  if (chatHeader) chatHeader.setAttribute('data-contact-id', contact.id);
+  
+  // 加载聊天历史
+  loadContactChatHistory(contactId);
+  
+  // 更新最后活跃时间
+  contact.lastActive = new Date().toISOString();
+  saveContacts();
+  
+  // 更新UI
+  renderContacts();
+  updatePopupContacts();
+}
+
+// 加载联系人聊天历史
+function loadContactChatHistory(contactId) {
+  const chatMessagesContainer = document.getElementById('chat-messages');
+  if (!chatMessagesContainer) return;
+  
+  // 清空现有聊天记录
+  chatMessagesContainer.innerHTML = '';
+  
+  // 滚动到底部
+  chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+}
+
+// 初始化联系人功能
+function initContacts() {
+  loadContacts();
+  renderContacts();
+  initCreateContactModal();
+  
+  // 绑定聊天页面的添加联系人按钮
+  const addContactFromChatBtn = document.getElementById('add-contact-from-chat-btn');
+  if (addContactFromChatBtn) {
+    addContactFromChatBtn.addEventListener('click', () => {
+      document.getElementById('create-contact-modal').style.display = 'block';
+    });
+  }
+}
+
+// 在DOM加载完成后初始化
+document.addEventListener('DOMContentLoaded', () => {
+  // 确保其他初始化函数先运行
+  initSidebarTabs();
+  initProfilePage();
+  initSettingsPage();
+  
+  // 初始化联系人功能
+  setTimeout(() => {
+    initContacts();
+    console.log('联系人功能初始化完成');
+  }, 100);
+});

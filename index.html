@@ -57,6 +57,15 @@
             </svg>
             <span>聊天</span>
           </button>
+          <!-- 聊天联系人弹窗 -->
+          <div class="chat-contacts-popup">
+            <div class="popup-header">
+              <h3>联系人</h3>
+            </div>
+            <div class="popup-content">
+              <!-- 联系人列表将在此动态渲染 -->
+            </div>
+          </div>
           <button class="sidebar-tab" data-tab="contacts" title="联系人">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
@@ -75,7 +84,7 @@
           </button>
           <button class="sidebar-tab" data-tab="settings" title="设置">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94 l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+              <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94 l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98 0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
             </svg>
             <span>设置</span>
           </button>
@@ -92,8 +101,8 @@
             <img src="images/app-icon.png" alt="聊天对象" width="40" height="40">
           </div>
           <div class="chat-info">
-            <div class="chat-name">DeepSeek</div>
-            <div class="chat-status online">在线</div>
+            <div class="chat-name">选择联系人</div>
+            <div class="chat-status">请先创建联系人</div>
           </div>
           <div class="chat-actions">
             <!-- 暂时移除所有操作按钮 -->
@@ -104,52 +113,18 @@
         <div class="chat-messages-container">
           <div class="chat-messages-bg"></div>
           <div class="chat-messages" id="chat-messages">
-            <!-- 系统消息 -->
-            <div class="message system-message">
-              <div class="message-content">
-                <p>今天 14:30</p>
-              </div>
-            </div>
-            
-            <!-- AI 消息 -->
-            <div class="message ai-message">
-              <div class="message-avatar">
-                <img src="images/app-icon.png" alt="AI" width="32" height="32">
-              </div>
-              <div class="message-content">
-                <p>你好！我是 DeepSeek，很高兴为你提供帮助。</p>
-                <div class="message-time">14:31</div>
-              </div>
-            </div>
-            
-            <!-- 用户消息 -->
-            <div class="message user-message">
-              <div class="message-content">
-                <p>你好！我想了解一下如何使用这个聊天应用。</p>
-                <div class="message-time">14:32</div>
-              </div>
-              <div class="message-avatar">
-                <img src="images/app-icon.png" alt="我" width="32" height="32">
-              </div>
-            </div>
-            
-            <!-- AI 消息 -->
-            <div class="message ai-message">
-              <div class="message-avatar">
-                <img src="images/app-icon.png" alt="AI" width="32" height="32">
-              </div>
-              <div class="message-content">
-                <p>使用方法很简单！你只需要在下方输入框中输入你的问题或消息，然后点击发送按钮或者按 Enter 键发送即可。</p>
-                <p>我支持多种功能，包括：</p>
-                <ul>
-                  <li>自然语言对话</li>
-                  <li>问题解答</li>
-                  <li>信息查询</li>
-                  <li>创意写作</li>
-                  <li>代码帮助</li>
-                </ul>
-                <p>你可以随时开始提问！</p>
-                <div class="message-time">14:33</div>
+            <!-- 无联系人时的提示 -->
+            <div class="no-contact-prompt" id="no-contact-chat-prompt">
+              <div class="prompt-content">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="7" r="4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h3>暂无联系人</h3>
+                <p>您还没有创建任何联系人，无法开始聊天</p>
+                <button class="btn btn-primary" id="add-contact-from-chat-btn">
+                  + 创建联系人
+                </button>
               </div>
             </div>
           </div>
@@ -159,8 +134,8 @@
         <div class="chat-input-area">
           <!-- 移除了工具按钮栏 -->
           <div class="input-container">
-            <textarea class="message-input" id="message-input" placeholder="输入消息..." rows="1"></textarea>
-            <button class="send-btn" id="send-btn">
+            <textarea class="message-input" id="message-input" placeholder="请先创建联系人才能发送消息..." rows="1" disabled></textarea>
+            <button class="send-btn" id="send-btn" disabled>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"></line>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -169,77 +144,49 @@
           </div>
         </div>
       </div>
+      
       <div class="content-area" id="contacts-content" style="display: none;">
         <div class="contacts-container">
           <div class="contacts-header">
             <h1>联系人</h1>
-            <div class="search-bar">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M21 21L16.65 16.65" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-              <input type="text" placeholder="搜索联系人" class="search-input" id="contacts-search">
+            <div class="header-actions">
+              <div class="search-bar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M21 21L16.65 16.65" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <input type="text" placeholder="搜索联系人" class="search-input" id="contacts-search">
+              </div>
+              <button class="create-contact-btn" id="create-contact-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                创建联系人
+              </button>
             </div>
           </div>
           
           <div class="contacts-list">
-            <!-- 联系人分组 -->
             <div class="contacts-group">
               <div class="group-header">
                 <span class="group-title">联系人</span>
-                <span class="group-count">3</span>
+                <span class="group-count">0</span>
               </div>
-              <div class="group-contacts">
-                <!-- 联系人卡片 -->
-                <div class="contact-item">
-                  <div class="contact-avatar">
-                    <img src="images/app-icon.png" alt="DeepSeek" width="48" height="48">
-                  </div>
-                  <div class="contact-info">
-                    <div class="contact-name">DeepSeek</div>
-                    <div class="contact-status online">在线</div>
-                  </div>
-                  <button class="contact-action">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-                
-                <div class="contact-item">
-                  <div class="contact-avatar">
-                    <img src="images/app-icon.png" alt="阿里云百炼" width="48" height="48">
-                  </div>
-                  <div class="contact-info">
-                    <div class="contact-name">阿里云百炼</div>
-                    <div class="contact-status online">在线</div>
-                  </div>
-                  <button class="contact-action">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-                
-                <div class="contact-item">
-                  <div class="contact-avatar">
-                    <img src="images/app-icon.png" alt="Kimi" width="48" height="48">
-                  </div>
-                  <div class="contact-info">
-                    <div class="contact-name">Kimi</div>
-                    <div class="contact-status online">在线</div>
-                  </div>
-                  <button class="contact-action">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
+              <div class="group-contacts empty">
+                <div class="empty-message">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="7" r="4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <p>暂无联系人</p>
+                  <p>点击上方"创建联系人"按钮添加新的AI助手</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      
       <div class="content-area" id="profile-content" style="display: none;">
         <div class="profile-container">
           <h1>个人资料</h1>
@@ -312,6 +259,7 @@
           </div>
         </div>
       </div>
+      
       <div class="content-area" id="settings-content" style="display: none;">
         <div class="settings-container">
           <!-- 左侧导航栏 -->
@@ -329,6 +277,12 @@
                 <path d="M17.8851 8.29353C17.8851 9.50601 16.8982 10.4889 15.6807 10.4889C14.4633 10.4889 13.4763 9.50601 13.4763 8.29353C13.4763 7.08105 14.4633 6.09814 15.6807 6.09814C16.8982 6.09814 17.8851 7.08105 17.8851 8.29353Z" stroke="currentColor" stroke-width="1.5"/>
               </svg>
               <span>API-Keys管理</span>
+            </div>
+            <div class="sidebar-item" data-tab="advanced">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.05-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22l-1.92 3.32c-.12.22-.07.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.03-1.58zm-7.14 2.06c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="currentColor"/>
+              </svg>
+              <span>高级选项</span>
             </div>
             <div class="sidebar-item" data-tab="about">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -450,6 +404,42 @@
               </div>
             </div>
             
+            <!-- 高级选项内容 -->
+            <div class="settings-tab" id="advanced-tab">
+              <h1>高级选项</h1>
+              
+              <div class="section">
+                <div class="section-title">清除数据</div>
+                <div class="clear-data-section">
+                  <p class="warning-text" style="color: #e74c3c; margin-bottom: 16px;">警告：清除数据操作不可逆，请谨慎执行！</p>
+                  
+                  <div class="clear-data-item">
+                    <div class="clear-data-info">
+                      <h3>清除全部数据</h3>
+                      <p>清除所有应用数据，包括联系人、聊天记录、用户设置等。</p>
+                    </div>
+                    <button class="btn btn-danger" id="clear-all-data-btn">清除全部数据</button>
+                  </div>
+                  
+                  <div class="clear-data-item">
+                    <div class="clear-data-info">
+                      <h3>清除联系人数据</h3>
+                      <p>只清除联系人列表数据，不影响聊天记录和用户设置。</p>
+                    </div>
+                    <button class="btn btn-danger" id="clear-contacts-btn">清除联系人数据</button>
+                  </div>
+                  
+                  <div class="clear-data-item">
+                    <div class="clear-data-info">
+                      <h3>清除用户数据</h3>
+                      <p>清除用户信息和设置，不影响联系人列表和聊天记录。</p>
+                    </div>
+                    <button class="btn btn-danger" id="clear-user-data-btn">清除用户数据</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <!-- 关于页面内容 -->
             <div class="settings-tab" id="about-tab">
               <h1>关于无界AI聊天</h1>
@@ -538,79 +528,236 @@
     </div>
   </div>
   
-  <script src="js/titlebar.js"></script>
+  <!-- 成功提示InfoBar -->
+  <div id="success-info-bar" class="info-bar" style="display: none;">
+    <div class="info-bar-content">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="m9 12 2 2 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span id="info-bar-message">操作成功</span>
+    </div>
+  </div>
+  
+  <!-- 创建联系人弹窗 -->
+  <div id="create-contact-modal" class="modal">
+    <div class="modal-content contact-modal">
+      <div class="modal-header">
+        <h2 id="contact-modal-title">创建联系人</h2>
+        <button class="close-btn" id="close-contact-modal">&times;</button>
+      </div>
+      <div class="modal-body contact-modal-body">
+        <form id="contact-form">
+          <!-- 基础配置 -->
+          <div class="form-section">
+            <h3>基础配置</h3>
+            <div class="form-group">
+              <label for="contact-avatar">联系人头像</label>
+              <div class="avatar-upload-container">
+                <div class="current-contact-avatar" id="contact-avatar-preview">
+                  <img src="images/app-icon.png" alt="联系人头像" width="80" height="80">
+                </div>
+                <div class="avatar-upload-controls">
+                  <label class="btn btn-small btn-secondary" for="contact-avatar-input">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="1.5"/>
+                      <polyline points="17 8 12 3 7 8" stroke-width="1.5"/>
+                      <line x1="12" y1="3" x2="12" y2="15" stroke-width="1.5"/>
+                    </svg>
+                    选择头像
+                  </label>
+                  <input type="file" id="contact-avatar-input" accept="image/*" class="hidden-file-input">
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="contact-provider">AI 服务提供商 <span class="required">*</span></label>
+                <select id="contact-provider" class="form-control" required>
+                  <option value="">请选择服务商</option>
+                  <option value="DeepSeek">DeepSeek</option>
+                  <option value="阿里云百炼">阿里云百炼</option>
+                  <option value="Kimi">Kimi</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="contact-apikey">API-Key <span class="required">*</span></label>
+                <select id="contact-apikey" class="form-control" required disabled>
+                  <option value="">请先选择服务商</option>
+                </select>
+                <div class="form-hint" id="apikey-hint">请先选择服务商</div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="contact-model">模型 <span class="required">*</span></label>
+                <div class="model-select-container">
+                  <select id="contact-model" class="form-control" required disabled>
+                    <option value="">请先选择API-Key</option>
+                  </select>
+                  <input type="text" id="contact-model-custom" class="form-control" placeholder="或输入自定义模型名称" style="display: none;">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="contact-nickname">AI 昵称 <span class="required">*</span></label>
+                <input type="text" id="contact-nickname" class="form-control" placeholder="为AI助手起一个名字" required>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="contact-system-prompt">AI 人设（system prompt）</label>
+              <textarea id="contact-system-prompt" class="form-control" rows="3" placeholder="留空则使用默认人设（选填）"></textarea>
+              <div class="form-hint">用于设定AI的角色、性格和回答风格</div>
+            </div>
+          </div>
+          
+          <!-- 功能开关 -->
+          <div class="form-section">
+            <h3>功能开关</h3>
+            <div class="toggle-group">
+              <div class="toggle-item">
+                <div class="toggle-label">
+                  <span>是否为角色扮演</span>
+                  <div class="toggle-switch" id="roleplay-toggle">
+                    <div class="toggle-dot"></div>
+                  </div>
+                </div>
+                <div class="toggle-description">决定 AI 是否使用流式输出</div>
+              </div>
+              
+              <div class="toggle-item">
+                <div class="toggle-label">
+                  <span>联网搜索</span>
+                  <div class="toggle-switch" id="websearch-toggle">
+                    <div class="toggle-dot"></div>
+                  </div>
+                </div>
+                <div class="toggle-description" id="websearch-hint">该功能需要模型支持</div>
+              </div>
+              
+              <div class="toggle-item">
+                <div class="toggle-label">
+                  <span>深度思考</span>
+                  <div class="toggle-switch" id="deepthink-toggle">
+                    <div class="toggle-dot"></div>
+                  </div>
+                </div>
+                <div class="toggle-description" id="deepthink-hint">该功能需要模型支持</div>
+              </div>
+              
+              <div class="form-hint" style="margin-top: 8px; font-size: 12px; color: #888;">
+                说明：后续可在聊天页面管理功能开关，功能需模型支持
+              </div>
+            </div>
+          </div>
+          
+          <!-- 高级选项 -->
+          <div class="form-section">
+            <div class="section-header-toggle">
+              <h3>高级选项</h3>
+              <div class="toggle-switch" id="advanced-toggle">
+                <div class="toggle-dot"></div>
+              </div>
+            </div>
+            
+            <div class="advanced-options" id="advanced-options" style="display: none;">
+              <div class="slider-group">
+                <div class="slider-item">
+                  <div class="slider-label">
+                    <span>top_p 参数</span>
+                    <span class="slider-value" id="top-p-value">0.8000</span>
+                  </div>
+                  <input type="range" id="top-p-slider" class="parameter-slider" min="0" max="1" step="0.0001" value="0.8000">
+                  <div class="slider-range">
+                    <span>0</span>
+                    <span>1</span>
+                  </div>
+                </div>
+                
+                <div class="slider-item">
+                  <div class="slider-label">
+                    <span>temperature 参数</span>
+                    <span class="slider-value" id="temperature-value">0.7000</span>
+                  </div>
+                  <input type="range" id="temperature-slider" class="parameter-slider" min="0" max="2" step="0.0001" value="0.7000">
+                  <div class="slider-range">
+                    <span>0</span>
+                    <span>2</span>
+                  </div>
+                </div>
+                
+                <div class="slider-item">
+                  <div class="slider-label">
+                    <span>thinking_budget 参数</span>
+                    <span class="slider-value" id="thinkingbudget-value">4000</span>
+                  </div>
+                  <input type="range" id="thinkingbudget-slider" class="parameter-slider" min="0" max="10000" step="1" value="4000">
+                  <div class="slider-range">
+                    <span>0</span>
+                    <span>10000</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-contact-btn" class="btn btn-secondary">取消</button>
+        <button id="save-contact-btn" class="btn btn-primary">创建联系人</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="./node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="./node_modules/cropperjs/dist/cropper.min.js"></script>
+  <script src="./node_modules/jquery-cropper/dist/jquery-cropper.min.js"></script>
+  <!-- 引入 crypto-js 用于加密 -->
+  <script src="./node_modules/crypto-js/crypto-js.js"></script>
+  <script src="./js/titlebar.js"></script>
   <script>
-    // 聊天功能实现
-    document.addEventListener('DOMContentLoaded', function() {
-      const messageInput = document.getElementById('message-input');
-      const sendBtn = document.getElementById('send-btn');
-      const chatMessages = document.getElementById('chat-messages');
-      
-      // 允许用户手动调整输入框高度
-      // 移除了自动调整高度的功能，改为使用CSS resize属性
-      
-      // 发送消息
-      function sendMessage() {
-        const message = messageInput.value.trim();
-        if (!message) return;
-        
-        // 创建用户消息元素
-        const userMessage = document.createElement('div');
-        userMessage.className = 'message user-message';
-        userMessage.innerHTML = `
-          <div class="message-content">
-            <p>${message}</p>
-            <div class="message-time">${getCurrentTime()}</div>
-          </div>
-          <div class="message-avatar">
-            <img src="images/app-icon.png" alt="我" width="32" height="32">
-          </div>
-        `;
-        
-        chatMessages.appendChild(userMessage);
-        messageInput.value = '';
-        // 保留用户手动调整的高度，仅在需要时重置
-        messageInput.style.height = 'auto';
-        messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
-        
-        // 滚动到底部
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-        // 模拟 AI 回复
-        setTimeout(() => {
-          const aiMessage = document.createElement('div');
-          aiMessage.className = 'message ai-message';
-          aiMessage.innerHTML = `
-            <div class="message-avatar">
-              <img src="images/app-icon.png" alt="AI" width="32" height="32">
-            </div>
-            <div class="message-content">
-              <p>这是一条模拟的 AI 回复。你发送的消息是：${message}</p>
-              <div class="message-time">${getCurrentTime()}</div>
-            </div>
-          `;
-          chatMessages.appendChild(aiMessage);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 1000);
+    // 自定义协议处理
+    window.addEventListener('message', function(event) {
+      if (event.data.type === 'customProtocol') {
+        // 处理自定义协议链接
+        handleCustomProtocol(event.data.url);
       }
-      
-      // 获取当前时间
-      function getCurrentTime() {
-        const now = new Date();
-        return now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-      }
-      
-      // 发送按钮点击事件
-      sendBtn.addEventListener('click', sendMessage);
-      
-      // 回车键发送消息（Ctrl+Enter 换行）
-      messageInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.ctrlKey) {
-          e.preventDefault();
-          sendMessage();
-        }
-      });
     });
+    
+    function handleCustomProtocol(url) {
+      // 解析URL参数
+      const params = new URLSearchParams(new URL(url).search);
+      const action = params.get('action');
+      
+      switch(action) {
+        case 'openChat':
+          const userId = params.get('userId');
+          openChatWithUser(userId);
+          break;
+        case 'share':
+          const content = params.get('content');
+          shareToWuJie(content);
+          break;
+        default:
+          console.log('Unknown action:', action);
+      }
+    }
+    
+    function openChatWithUser(userId) {
+      // 实现打开与特定用户聊天的功能
+      console.log('Opening chat with user:', userId);
+      // 这里可以添加具体的聊天打开逻辑
+    }
+    
+    function shareToWuJie(content) {
+      // 实现分享内容到无界的逻辑
+      console.log('Sharing content:', content);
+      // 这里可以添加具体的分享逻辑
+    }
   </script>
 </body>
 </html>
