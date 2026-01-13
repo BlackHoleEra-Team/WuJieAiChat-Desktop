@@ -8,15 +8,40 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "build": "electron-builder"
   },
   "devDependencies": {
-    "electron": "^39.2.7"
+    "electron": "^39.2.7",
+    "electron-builder": "^26.4.0"
   },
   "build": {
+    "appId": "com.wujieaichat.desktop",
+    "productName": "无界AI聊天",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/**/*.{md,spec.js}",
+      "!src/**/*.{md,spec.js}"
+    ],
     "win": {
-      "requestedExecutionLevel": "asInvoker",
-      "dpiAware": false
+      "target": "nsis",
+      "icon": "images/app-icon.png",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "images/app-icon.png",
+      "uninstallerIcon": "images/app-icon.png",
+      "installerHeaderIcon": "images/app-icon.png",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "无界AI聊天"
     }
   },
   "dependencies": {

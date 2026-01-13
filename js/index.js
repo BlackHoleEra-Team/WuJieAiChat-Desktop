@@ -12,6 +12,88 @@ const closeBtn = document.getElementById('closeBtn')
 const titleBar = document.getElementById('titleBar')
 const appIcon = document.getElementById('appIcon')
 
+// 自定义弹窗对象
+const customModal = {
+  // 显示alert弹窗
+  alert: function(message, title = '提示') {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('custom-modal')
+      const modalTitle = document.getElementById('custom-modal-title')
+      const modalMessage = document.getElementById('custom-modal-message')
+      const cancelBtn = document.getElementById('custom-modal-cancel')
+      const confirmBtn = document.getElementById('custom-modal-confirm')
+      const closeBtn = modal.querySelector('.custom-modal-close')
+      
+      // 设置弹窗内容
+      modalTitle.textContent = title
+      modalMessage.textContent = message
+      
+      // 隐藏取消按钮，只显示确认按钮
+      cancelBtn.style.display = 'none'
+      confirmBtn.textContent = '确定'
+      
+      // 显示弹窗
+      modal.style.display = 'flex'
+      
+      // 绑定确认按钮事件
+      const handleConfirm = () => {
+        modal.style.display = 'none'
+        confirmBtn.removeEventListener('click', handleConfirm)
+        closeBtn.removeEventListener('click', handleConfirm)
+        resolve()
+      }
+      
+      confirmBtn.addEventListener('click', handleConfirm)
+      closeBtn.addEventListener('click', handleConfirm)
+    })
+  },
+  
+  // 显示confirm弹窗
+  confirm: function(message, title = '确认') {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('custom-modal')
+      const modalTitle = document.getElementById('custom-modal-title')
+      const modalMessage = document.getElementById('custom-modal-message')
+      const cancelBtn = document.getElementById('custom-modal-cancel')
+      const confirmBtn = document.getElementById('custom-modal-confirm')
+      const closeBtn = modal.querySelector('.custom-modal-close')
+      
+      // 设置弹窗内容
+      modalTitle.textContent = title
+      modalMessage.textContent = message
+      
+      // 显示取消和确认按钮
+      cancelBtn.style.display = 'inline-flex'
+      confirmBtn.textContent = '确认'
+      
+      // 显示弹窗
+      modal.style.display = 'flex'
+      
+      // 绑定取消按钮事件
+      const handleCancel = () => {
+        modal.style.display = 'none'
+        cancelBtn.removeEventListener('click', handleCancel)
+        confirmBtn.removeEventListener('click', handleConfirm)
+        closeBtn.removeEventListener('click', handleCancel)
+        resolve(false)
+      }
+      
+      // 绑定确认按钮事件
+      const handleConfirm = () => {
+        modal.style.display = 'none'
+        cancelBtn.removeEventListener('click', handleCancel)
+        confirmBtn.removeEventListener('click', handleConfirm)
+        closeBtn.removeEventListener('click', handleCancel)
+        resolve(true)
+      }
+      
+      cancelBtn.addEventListener('click', handleCancel)
+      confirmBtn.addEventListener('click', handleConfirm)
+      closeBtn.addEventListener('click', handleCancel)
+    })
+  }
+}
+
 // 处理图标加载失败
 appIcon.addEventListener('error', () => {
   console.warn('应用图标加载失败，使用备用图标')
@@ -332,31 +414,69 @@ function initSidebarTabs() {
     // 保存原始transition值
     const originalTransition = targetContent.style.transition
     
-    // 如果是飞入动画，根据点击位置设置初始位置
-    if (animationType === 'fly' && clickPos) {
-      // 暂时禁用默认transition，避免与keyframes动画冲突
-      targetContent.style.transition = 'none'
-      
-      // 获取目标内容区域的中心位置
-      const rect = targetContent.getBoundingClientRect()
-      const centerX = rect.left + rect.width / 2
-      const centerY = rect.top + rect.height / 2
-      
-      // 计算点击位置到中心位置的差值
-      const deltaX = clickPos.x - centerX
-      const deltaY = clickPos.y - centerY
-      
-      // 设置初始变换原点为点击位置相对于内容区域的位置
-      const originX = (clickPos.x - rect.left) / rect.width * 100 + '%'
-      const originY = (clickPos.y - rect.top) / rect.height * 100 + '%'
-      
-      // 在添加动画类之前，先设置初始位置
-      targetContent.style.transform = `scale(0.2) translate(${deltaX}px, ${deltaY}px)`
-      targetContent.style.transformOrigin = `${originX} ${originY}`
-      
-      // 强制重排，确保初始状态生效
-      targetContent.offsetHeight
+    // 暂时禁用默认transition，避免与keyframes动画冲突
+    targetContent.style.transition = 'none'
+    
+    // 为不同动画类型设置初始状态
+    switch (animationType) {
+      case 'fade':
+        // 淡入动画初始状态
+        targetContent.style.opacity = '0'
+        targetContent.style.transform = 'scale(0.95)'
+        break
+      case 'zoom':
+        // 缩放动画初始状态
+        targetContent.style.opacity = '0'
+        targetContent.style.transform = 'scale(0.8)'
+        break
+      case 'rotate':
+        // 旋转动画初始状态
+        targetContent.style.opacity = '0'
+        targetContent.style.transform = 'rotate(-10deg) scale(0.9)'
+        break
+      case 'slide':
+        // 滑动动画初始状态
+        targetContent.style.opacity = '0'
+        if (currentIndex === -1 || targetIndex > currentIndex) {
+          // 从右侧滑入
+          targetContent.style.transform = 'translateX(50px)'
+        } else {
+          // 从左侧滑入
+          targetContent.style.transform = 'translateX(-50px)'
+        }
+        break
+      case 'fly':
+        // 飞入动画效果 - 根据点击位置设置初始位置
+        if (clickPos) {
+          // 获取目标内容区域的中心位置
+          const rect = targetContent.getBoundingClientRect()
+          const centerX = rect.left + rect.width / 2
+          const centerY = rect.top + rect.height / 2
+          
+          // 计算点击位置到中心位置的差值
+          const deltaX = clickPos.x - centerX
+          const deltaY = clickPos.y - centerY
+          
+          // 设置初始变换原点为点击位置相对于内容区域的位置
+          const originX = (clickPos.x - rect.left) / rect.width * 100 + '%'
+          const originY = (clickPos.y - rect.top) / rect.height * 100 + '%'
+          
+          // 设置初始位置
+          targetContent.style.transform = `scale(0.2) translate(${deltaX}px, ${deltaY}px)`
+          targetContent.style.transformOrigin = `${originX} ${originY}`
+        } else {
+          // 如果没有点击位置，使用默认飞入效果
+          targetContent.style.transform = 'scale(0.2) translate(0, 0)'
+        }
+        targetContent.style.opacity = '0'
+        break
+      default:
+        // 默认初始状态
+        targetContent.style.opacity = '0'
     }
+    
+    // 强制重排，确保初始状态生效
+    targetContent.offsetHeight
     
     // 添加动画类
     targetContent.classList.add(animationClass)
@@ -760,7 +880,7 @@ function initProfilePage() {
     const acceptedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'image/svg+xml']
     if (!file.type.startsWith('image/') && !acceptedTypes.includes(file.type)) {
       console.warn('文件类型不是图片:', file.type)
-      alert('请选择有效的图片文件（JPG、PNG、GIF、BMP、WebP、SVG等格式）！')
+      customModal.alert('请选择有效的图片文件（JPG、PNG、GIF、BMP、WebP、SVG等格式）！')
       return
     }
     
@@ -768,7 +888,7 @@ function initProfilePage() {
     const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {
       console.warn('文件过大:', file.size, 'bytes')
-      alert('图片文件过大，请选择小于10MB的图片！')
+      customModal.alert('图片文件过大，请选择小于10MB的图片！')
       return
     }
     
@@ -828,14 +948,14 @@ function initProfilePage() {
           showAvatarCropPage(imageUrl)
         } catch (error) {
           console.error('图片处理失败：', error)
-          alert('图片处理失败，请稍后重试！')
+          customModal.alert('图片处理失败，请稍后重试！')
         }
       }
       
       // 读取错误事件
       reader.onerror = (error) => {
         console.error('图片读取失败：', error)
-        alert('图片读取失败，请检查文件是否损坏！')
+        customModal.alert('图片读取失败，请检查文件是否损坏！')
       }
       
       // 开始读取文件
@@ -843,14 +963,14 @@ function initProfilePage() {
         reader.readAsDataURL(file)
       } catch (error) {
         console.error('读取文件时发生错误：', error)
-        alert('读取文件时发生错误，请检查文件是否有效！')
+        customModal.alert('读取文件时发生错误，请检查文件是否有效！')
       }
     }
     
     testImg.onerror = () => {
       console.error('Blob URL 测试加载失败，文件可能损坏')
       URL.revokeObjectURL(blobUrl)
-      alert('图片文件可能已损坏或格式不支持，请选择其他图片！')
+      customModal.alert('图片文件可能已损坏或格式不支持，请选择其他图片！')
     }
     
     // 开始测试加载
@@ -859,9 +979,11 @@ function initProfilePage() {
   
   // 移除头像按钮点击事件
   removeAvatarBtn.addEventListener('click', () => {
-    if (confirm('确定要移除当前头像吗？')) {
-      removeAvatar()
-    }
+    customModal.confirm('确定要移除当前头像吗？').then((result) => {
+      if (result) {
+        removeAvatar()
+      }
+    })
   })
   
   // 保存用户名按钮点击事件
@@ -869,12 +991,12 @@ function initProfilePage() {
     const newUsername = usernameInput.value.trim()
     if (newUsername) {
       if (newUsername.length > 20) {
-        alert('用户名不能超过20个字符！')
+        customModal.alert('用户名不能超过20个字符！')
         return
       }
       updateUsername(newUsername)
     } else {
-      alert('请输入用户名！')
+      customModal.alert('请输入用户名！')
     }
   })
   
@@ -928,7 +1050,7 @@ function initProfilePage() {
     saveUserData(userData)
     
     console.log('用户名已更新为：' + username)
-    alert('用户名保存成功！')
+    customModal.alert('用户名保存成功！')
   }
   
   // 获取用户数据
@@ -1036,18 +1158,41 @@ function loadUserData() {
     const cropContent = document.getElementById('avatar-crop-content')
     if (!cropContent) {
       console.error('裁剪页面元素不存在')
-      alert('裁剪功能初始化失败，请刷新页面重试')
+      customModal.alert('裁剪功能初始化失败，请刷新页面重试')
       return
     }
     
     cropContent.style.display = 'block'
     
     // 初始化裁剪功能
-    initAvatarCrop(imageUrl)
+    initAvatarCrop(imageUrl, 'user')
+  }
+  
+  // 显示联系人头像裁剪页面
+  function showContactAvatarCropPage(imageUrl) {
+    console.log('显示联系人头像裁剪页面，图片URL长度:', imageUrl.length)
+    
+    // 隐藏所有内容区域
+    document.querySelectorAll('.content-area').forEach(area => {
+      area.style.display = 'none'
+    })
+    
+    // 显示裁剪页面
+    const cropContent = document.getElementById('avatar-crop-content')
+    if (!cropContent) {
+      console.error('裁剪页面元素不存在')
+      customModal.alert('裁剪功能初始化失败，请刷新页面重试')
+      return
+    }
+    
+    cropContent.style.display = 'block'
+    
+    // 初始化裁剪功能
+    initAvatarCrop(imageUrl, 'contact')
   }
   
   // 头像裁剪功能 - 使用 Cropper.js 实现
-  function initAvatarCrop(imageUrl) {
+  function initAvatarCrop(imageUrl, avatarType) {
     // 获取DOM元素
     const canvas = document.getElementById('avatar-canvas');
     const clipImg = document.getElementById('clip-img');
@@ -1157,12 +1302,12 @@ function loadUserData() {
         });
         
         // 保存裁剪后的头像
-        saveCroppedAvatar(croppedCanvas);
+        saveCroppedAvatar(croppedCanvas, avatarType);
         
         // 销毁 cropper 实例
         cropper.destroy();
       } else {
-        alert('请先选择图片！');
+        customModal.alert('请先选择图片！');
       }
     }
     
@@ -1174,17 +1319,25 @@ function loadUserData() {
         cropper = null;
       }
       
-      // 返回个人资料页面
+      // 根据头像类型返回不同页面
       document.querySelectorAll('.content-area').forEach(area => {
         area.style.display = 'none'
       })
-      document.getElementById('profile-content').style.display = 'block'
       
-      // 重新激活个人资料标签
-      document.querySelectorAll('.sidebar-tab').forEach(tab => {
-        tab.classList.remove('active')
-      })
-      document.querySelector('[data-tab="profile"]').classList.add('active')
+      if (avatarType === 'contact') {
+        // 返回联系人创建/编辑弹窗
+        // 注意：这里不需要重新显示弹窗，因为弹窗一直是显示状态
+        // 只需要关闭裁剪页面即可
+      } else {
+        // 返回个人资料页面
+        document.getElementById('profile-content').style.display = 'block'
+        
+        // 重新激活个人资料标签
+        document.querySelectorAll('.sidebar-tab').forEach(tab => {
+          tab.classList.remove('active')
+        })
+        document.querySelector('[data-tab="profile"]').classList.add('active')
+      }
     }
     
     // 绑定按钮事件（只绑定一次）
@@ -1193,34 +1346,232 @@ function loadUserData() {
   }
   
   // 保存裁剪后的头像
-  function saveCroppedAvatar(canvas) {
+  function saveCroppedAvatar(canvas, avatarType) {
     try {
       // 将canvas转换为base64数据URL
       const dataUrl = canvas.toDataURL('image/png')
       
       console.log('头像已生成，准备保存')
       
-      // 更新头像显示
-      updateAvatar(dataUrl)
-      
-      // 返回个人资料页面
-      document.querySelectorAll('.content-area').forEach(area => {
-        area.style.display = 'none'
-      })
-      document.getElementById('profile-content').style.display = 'block'
-      
-      // 重新激活个人资料标签
-      document.querySelectorAll('.sidebar-tab').forEach(tab => {
-        tab.classList.remove('active')
-      })
-      document.querySelector('[data-tab="profile"]').classList.add('active')
-      
-      alert('头像裁剪完成！')
+      if (avatarType === 'contact') {
+        // 更新联系人头像预览
+        const contactAvatarPreview = document.getElementById('contact-avatar-preview');
+        contactAvatarPreview.querySelector('img').src = dataUrl;
+        
+        // 关闭裁剪页面
+        document.querySelectorAll('.content-area').forEach(area => {
+          area.style.display = 'none'
+        })
+        
+        // 返回到联系人创建/编辑弹窗
+        // 弹窗应该已经在显示状态，不需要重新显示
+        
+        customModal.alert('头像裁剪完成！')
+      } else {
+        // 更新用户头像显示
+        updateAvatar(dataUrl)
+        
+        // 返回个人资料页面
+        document.querySelectorAll('.content-area').forEach(area => {
+          area.style.display = 'none'
+        })
+        document.getElementById('profile-content').style.display = 'block'
+        
+        // 重新激活个人资料标签
+        document.querySelectorAll('.sidebar-tab').forEach(tab => {
+          tab.classList.remove('active')
+        })
+        document.querySelector('[data-tab="profile"]').classList.add('active')
+        
+        customModal.alert('头像裁剪完成！')
+      }
       
     } catch (error) {
       console.error('保存头像失败：', error)
-      alert('保存头像失败：' + error.message)
+      customModal.alert('保存头像失败：' + error.message)
     }
+  }
+}
+
+// 显示联系人头像裁剪弹窗
+function showContactAvatarCropModal(imageUrl) {
+  console.log('显示联系人头像裁剪弹窗，图片URL长度:', imageUrl.length)
+  
+  // 显示裁剪弹窗
+  const cropModal = document.getElementById('avatar-crop-modal')
+  if (!cropModal) {
+    console.error('裁剪弹窗元素不存在')
+    customModal.alert('裁剪功能初始化失败，请刷新页面重试')
+    return
+  }
+  
+  cropModal.style.display = 'flex'
+  
+  // 初始化裁剪功能
+  initModalAvatarCrop(imageUrl)
+}
+
+// 弹窗中的头像裁剪功能 - 使用 Cropper.js 实现
+function initModalAvatarCrop(imageUrl) {
+  // 获取DOM元素
+  const canvas = document.getElementById('modal-avatar-canvas');
+  const clipImg = document.getElementById('modal-clip-img');
+  const uploadFile = document.getElementById('avatar-modal-upload-file');
+  const saveBtn = document.getElementById('modal-crop-confirm-btn');
+  const cancelBtn = document.getElementById('modal-crop-cancel-btn');
+  const closeBtn = document.querySelector('#avatar-crop-modal .custom-modal-close');
+  
+  let cropper = null;
+  
+  // 移除可能存在的事件监听器（防止重复绑定）
+  // 先克隆元素，然后替换它，这样可以移除所有事件监听器
+  const newUploadFile = uploadFile.cloneNode(true);
+  uploadFile.parentNode.replaceChild(newUploadFile, uploadFile);
+  
+  // 使用新的元素引用
+  const fileInput = newUploadFile;
+  
+  // 重置文件输入值
+  fileInput.value = '';
+  
+  // 如果传入了图片URL，直接加载
+  if (imageUrl) {
+    loadImage(imageUrl);
+  }
+  
+  // 重新选择图片事件
+  fileInput.addEventListener('change', (e) => {
+    const fileData = e.target.files[0];
+    if (fileData) {
+      const reader = new FileReader();
+      reader.readAsDataURL(fileData);
+      reader.onload = function (e) {
+        const imgUrl = this.result;
+        loadImage(imgUrl);
+      };
+    }
+  });
+  
+  // 加载图片函数
+  function loadImage(imgUrl) {
+    // 销毁之前的 cropper 实例
+    if (cropper) {
+      cropper.destroy();
+    }
+    
+    // 设置图片源
+    clipImg.src = imgUrl;
+    
+    // 图片加载完成后初始化 cropper
+    clipImg.onload = function () {
+      // 初始化 Cropper.js
+      cropper = new Cropper(clipImg, {
+        aspectRatio: 1, // 1:1 比例
+        viewMode: 1,
+        dragMode: 'move',
+        cropBoxMovable: true,
+        cropBoxResizable: false,
+        autoCropArea: 0.8,
+        background: true,
+        guides: false,
+        center: true,
+        highlight: true,
+        responsive: true,
+        restore: true,
+        checkCrossOrigin: false,
+        // 添加裁剪事件，实时更新预览
+        crop: function(event) {
+          updatePreview();
+        }
+      });
+      
+      // 初始加载时更新预览
+      updatePreview();
+    };
+  }
+  
+  // 更新预览图像
+  function updatePreview() {
+    if (cropper) {
+      const previewImg = document.getElementById('modal-preview-img');
+      
+      // 获取裁剪后的画布
+      const croppedCanvas = cropper.getCroppedCanvas({
+        width: 200,
+        height: 200,
+        fillColor: '#fff',
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+      });
+      
+      // 设置预览图像源
+      previewImg.src = croppedCanvas.toDataURL('image/png');
+      previewImg.style.display = 'block';
+    }
+  }
+  
+  // 保存裁剪后的头像
+  function handleSave() {
+    if (cropper) {
+      // 获取裁剪后的画布
+      const croppedCanvas = cropper.getCroppedCanvas({
+        width: 300,
+        height: 300,
+        fillColor: '#fff',
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+      });
+      
+      // 保存裁剪后的头像
+      saveModalCroppedAvatar(croppedCanvas);
+      
+      // 销毁 cropper 实例
+      cropper.destroy();
+    } else {
+      customModal.alert('请先选择图片！');
+    }
+  }
+  
+  // 取消裁剪
+  function handleCancel() {
+    // 销毁 cropper 实例
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+    
+    // 关闭裁剪弹窗
+    const cropModal = document.getElementById('avatar-crop-modal');
+    cropModal.style.display = 'none';
+  }
+  
+  // 绑定按钮事件（只绑定一次）
+  saveBtn.onclick = handleSave;
+  cancelBtn.onclick = handleCancel;
+  closeBtn.onclick = handleCancel;
+}
+
+// 保存弹窗中裁剪后的头像
+function saveModalCroppedAvatar(canvas) {
+  try {
+    // 将canvas转换为base64数据URL
+    const dataUrl = canvas.toDataURL('image/png')
+    
+    console.log('头像已生成，准备保存')
+    
+    // 更新联系人头像预览
+    const contactAvatarPreview = document.getElementById('contact-avatar-preview');
+    contactAvatarPreview.querySelector('img').src = dataUrl;
+    
+    // 关闭裁剪弹窗
+    const cropModal = document.getElementById('avatar-crop-modal');
+    cropModal.style.display = 'none';
+    
+    customModal.alert('头像裁剪完成！')
+    
+  } catch (error) {
+    console.error('保存头像失败：', error)
+    customModal.alert('保存头像失败：' + error.message)
   }
 }
 
@@ -1259,8 +1610,11 @@ function initSettingsPage() {
       item.classList.remove('active')
     })
     
+    // 每次切换时重新获取所有设置标签页，确保包含最新克隆的元素
+    const currentSettingTabs = document.querySelectorAll('.settings-tab')
+    
     // 隐藏所有内容区域
-    settingTabs.forEach(tab => {
+    currentSettingTabs.forEach(tab => {
       tab.classList.remove('active')
     })
     
@@ -1309,40 +1663,49 @@ function initSettingsPage() {
     
     // 清除全部数据
     if (clearAllDataBtn) {
-      clearAllDataBtn.addEventListener('click', () => {
-        if (confirm('确定要清除所有数据吗？此操作不可逆！')) {
-          // 清除所有localStorage数据
-          localStorage.clear()
-          // 重新加载页面
-          location.reload()
-        }
+      clearAllDataBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        customModal.confirm('确定要清除所有数据吗？此操作不可逆！').then((result) => {
+          if (result) {
+            // 清除所有localStorage数据
+            localStorage.clear()
+            // 重新加载页面
+            location.reload()
+          }
+        })
       })
     }
     
     // 清除联系人数据
     if (clearContactsBtn) {
-      clearContactsBtn.addEventListener('click', () => {
-        if (confirm('确定要清除联系人数据吗？此操作不可逆！')) {
-          // 清除联系人数据
-          localStorage.removeItem('contacts')
-          // 重新加载页面
-          location.reload()
-        }
+      clearContactsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        customModal.confirm('确定要清除联系人数据吗？此操作不可逆！').then((result) => {
+          if (result) {
+            // 清除联系人数据
+            localStorage.removeItem('contacts')
+            // 重新加载页面
+            location.reload()
+          }
+        })
       })
     }
     
     // 清除用户数据
     if (clearUserDataBtn) {
-      clearUserDataBtn.addEventListener('click', () => {
-        if (confirm('确定要清除用户数据吗？此操作不可逆！')) {
-          // 清除用户数据
-          localStorage.removeItem('userData')
-          localStorage.removeItem('pageAnimationType')
-          localStorage.removeItem('backgroundType')
-          localStorage.removeItem('theme')
-          // 重新加载页面
-          location.reload()
-        }
+      clearUserDataBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        customModal.confirm('确定要清除用户数据吗？此操作不可逆！').then((result) => {
+          if (result) {
+            // 清除用户数据
+            localStorage.removeItem('userData')
+            localStorage.removeItem('pageAnimationType')
+            localStorage.removeItem('backgroundType')
+            localStorage.removeItem('theme')
+            // 重新加载页面
+            location.reload()
+          }
+        })
       })
     }
   }
@@ -1559,11 +1922,14 @@ function desensitizeKey(key) {
 // 复制密钥到剪贴板
 async function copyKeyToClipboard(key) {
   try {
+    // 确保文档获得焦点，使用body元素而不是document
+    document.body.focus()
+    
     await navigator.clipboard.writeText(key)
-    alert('密钥已复制到剪贴板')
+    customModal.alert('密钥已复制到剪贴板')
   } catch (error) {
     console.error('复制失败:', error)
-    alert('复制失败，请手动复制')
+    customModal.alert('复制失败，请手动复制')
   }
 }
 
@@ -1768,12 +2134,14 @@ function editKey(id) {
 
 // 删除密钥
 function deleteKey(id) {
-  if (confirm('确定要删除这个API密钥吗？')) {
-    apiKeys = apiKeys.filter(key => key.id !== id)
-    saveApiKeys()
-    renderApiKeys()
-    bindApiKeyEvents()
-  }
+  customModal.confirm('确定要删除这个API密钥吗？', '确认删除').then((result) => {
+    if (result) {
+      apiKeys = apiKeys.filter(key => key.id !== id)
+      saveApiKeys()
+      renderApiKeys()
+      bindApiKeyEvents()
+    }
+  })
 }
 
 // 切换密钥状态
@@ -1787,14 +2155,22 @@ function toggleKeyStatus(id) {
   bindApiKeyEvents()
 }
 
-// 绑定API密钥相关事件 - 优化事件委托
+// 绑定API密钥相关事件 - 优化事件委托，确保只绑定一次
 function bindApiKeyEvents() {
   // 使用事件委托，避免为每个按钮单独绑定事件
   const apiKeysTab = document.getElementById('api-keys-tab')
   if (!apiKeysTab) return
   
+  // 先移除所有可能存在的点击事件监听器，避免重复绑定
+  // 由于无法直接获取事件监听器列表，我们采用替换元素的方式
+  const newApiKeysTab = apiKeysTab.cloneNode(true)
+  apiKeysTab.parentNode.replaceChild(newApiKeysTab, apiKeysTab)
+  
+  // 重新获取引用
+  const updatedApiKeysTab = document.getElementById('api-keys-tab')
+  
   // 复制按钮事件 - 使用事件委托
-  apiKeysTab.addEventListener('click', (e) => {
+  updatedApiKeysTab.addEventListener('click', (e) => {
     if (e.target.closest('.copy-btn')) {
       const btn = e.target.closest('.copy-btn')
       const key = btn.getAttribute('data-key')
@@ -1802,14 +2178,8 @@ function bindApiKeyEvents() {
     }
   })
   
-  // 添加密钥按钮事件
-  const addBtn = document.querySelector('.add-key-btn-small')
-  if (addBtn) {
-    addBtn.addEventListener('click', addNewKey)
-  }
-  
   // 编辑按钮事件 - 使用事件委托
-  apiKeysTab.addEventListener('click', (e) => {
+  updatedApiKeysTab.addEventListener('click', (e) => {
     if (e.target.closest('.edit-btn')) {
       const btn = e.target.closest('.edit-btn')
       const id = btn.getAttribute('data-id')
@@ -1818,13 +2188,25 @@ function bindApiKeyEvents() {
   })
   
   // 删除按钮事件 - 使用事件委托
-  apiKeysTab.addEventListener('click', (e) => {
+  updatedApiKeysTab.addEventListener('click', (e) => {
     if (e.target.closest('.delete-btn')) {
       const btn = e.target.closest('.delete-btn')
       const id = btn.getAttribute('data-id')
       deleteKey(id)
     }
   })
+  
+  // 添加密钥按钮事件 - 单独绑定，因为不在apiKeysTab内
+  const addBtn = document.querySelector('.add-key-btn-small')
+  if (addBtn) {
+    // 先移除可能存在的点击事件监听器
+    const newAddBtn = addBtn.cloneNode(true)
+    addBtn.parentNode.replaceChild(newAddBtn, addBtn)
+    
+    // 重新获取引用并绑定事件
+    const updatedAddBtn = document.querySelector('.add-key-btn-small')
+    updatedAddBtn.addEventListener('click', addNewKey)
+  }
 }
 
 // 初始化自定义下拉菜单
@@ -2043,12 +2425,20 @@ function initBackgroundImage() {
   }
   
   // 点击预览区域触发文件选择
-  backgroundPreview.addEventListener('click', () => {
+  backgroundPreview.addEventListener('click', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    // 直接触发文件选择，不处理滚动问题
+    // CSS已经确保文件输入框不会影响页面布局
     backgroundInput.click()
   })
   
   // 处理文件选择
   backgroundInput.addEventListener('change', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
     const file = e.target.files[0]
     if (!file) return
     
@@ -2135,7 +2525,9 @@ function applyBackgroundImage(imageDataUrl) {
   document.body.style.backgroundSize = 'cover'
   document.body.style.backgroundPosition = 'center'
   document.body.style.backgroundRepeat = 'no-repeat'
-  document.body.style.backgroundAttachment = 'fixed'
+  
+  // 移除固定背景设置，避免与overflow: hidden产生冲突
+  document.body.style.backgroundAttachment = 'scroll'
   
   // 确保毛玻璃效果始终应用
   const sidebar = document.querySelector('.sidebar')
@@ -2576,7 +2968,8 @@ function initCreateContactModal() {
     if (file) {
       const reader = new FileReader();
       reader.onload = function(event) {
-        contactAvatarPreview.querySelector('img').src = event.target.result;
+        // 显示裁剪弹窗
+        showContactAvatarCropModal(event.target.result);
       };
       reader.readAsDataURL(file);
     }
@@ -2730,19 +3123,19 @@ function validateContactForm() {
   let isValid = true;
   
   if (!provider) {
-    alert('请选择AI服务提供商');
+    customModal.alert('请选择AI服务提供商');
     isValid = false;
   } else if (!apikey) {
-    alert('请选择API-Key');
+    customModal.alert('请选择API-Key');
     isValid = false;
   } else if (!model) {
-    alert('请选择模型或选择自定义模型');
+    customModal.alert('请选择模型或选择自定义模型');
     isValid = false;
   } else if (model === 'custom' && !modelCustom) {
-    alert('请输入自定义模型名称');
+    customModal.alert('请输入自定义模型名称');
     isValid = false;
   } else if (!nickname) {
-    alert('请输入AI昵称');
+    customModal.alert('请输入AI昵称');
     isValid = false;
   }
   
@@ -3162,15 +3555,15 @@ function editContact(id) {
 
 // 删除联系人
 function deleteContact(id) {
-  if (!confirm('确定要删除这个联系人吗？此操作不可撤销。')) {
-    return;
-  }
-  
-  contacts = contacts.filter(c => c.id !== id);
-  saveContacts();
-  renderContacts();
-  updatePopupContacts(); // 新增
-  updateChatPage(); // 新增
+  customModal.confirm('确定要删除这个联系人吗？此操作不可撤销。', '确认删除').then((result) => {
+    if (result) {
+      contacts = contacts.filter(c => c.id !== id);
+      saveContacts();
+      renderContacts();
+      updatePopupContacts(); // 新增
+      updateChatPage(); // 新增
+    }
+  });
 }
 
 // 切换到联系人聊天

@@ -539,6 +539,73 @@
     </div>
   </div>
   
+  <!-- 自定义弹窗 -->
+  <div id="custom-modal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-overlay"></div>
+    <div class="custom-modal-content">
+      <div class="custom-modal-header">
+        <h2 id="custom-modal-title"></h2>
+        <button class="custom-modal-close">&times;</button>
+      </div>
+      <div class="custom-modal-body">
+        <div id="custom-modal-message"></div>
+      </div>
+      <div class="custom-modal-footer">
+        <button id="custom-modal-cancel" class="btn btn-secondary">取消</button>
+        <button id="custom-modal-confirm" class="btn btn-primary">确认</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 头像裁切弹窗 -->
+  <div id="avatar-crop-modal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-overlay"></div>
+    <div class="custom-modal-content crop-modal-content">
+      <div class="custom-modal-header">
+        <h2 id="crop-modal-title">裁剪头像</h2>
+        <button class="custom-modal-close">&times;</button>
+      </div>
+      <div class="custom-modal-body crop-modal-body">
+        <div class="crop-section">
+          <div class="crop-main">
+            <!-- 左侧：裁剪区域 -->
+            <div class="crop-left">
+              <div class="upload">
+                <input type="file" class="upload-file" id="avatar-modal-upload-file" accept="image/*">
+                <div class="upload-btn">重新选择图片</div>
+              </div>
+
+              <!-- 显示上传的图片并选择裁剪区域 -->
+              <div class="clip-area">
+                <div class="clip-wrap">
+                  <img src="" class="clip-img" id="modal-clip-img" style="max-width: 100%;">
+                </div>
+              </div>
+            </div>
+
+            <!-- 右侧：预览和控制区域 -->
+            <div class="crop-right">
+              <!-- 预览头像 -->
+              <div class="preview-section">
+                <h3>预览</h3>
+                <div class="preview-container">
+                  <div class="preview-avatar">
+                    <img src="" class="preview-img" id="modal-preview-img" style="display: none;">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <canvas id="modal-avatar-canvas" style="display: none;"></canvas>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+        <button id="modal-crop-cancel-btn" class="btn btn-secondary">取消</button>
+        <button id="modal-crop-confirm-btn" class="btn btn-primary">确认裁剪</button>
+      </div>
+    </div>
+  </div>
+  
   <!-- 创建联系人弹窗 -->
   <div id="create-contact-modal" class="modal">
     <div class="modal-content contact-modal">
@@ -718,7 +785,7 @@
   <script src="./node_modules/jquery-cropper/dist/jquery-cropper.min.js"></script>
   <!-- 引入 crypto-js 用于加密 -->
   <script src="./node_modules/crypto-js/crypto-js.js"></script>
-  <script src="./js/titlebar.js"></script>
+  <script src="./js/index.js"></script>
   <script>
     // 自定义协议处理
     window.addEventListener('message', function(event) {

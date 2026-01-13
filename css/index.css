@@ -5,10 +5,14 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background: #e8e8e8; /* 稍微深一点的背景，突出毛玻璃效果 */
   overflow: hidden;
+  height: 100%;
+  width: 100%;
+  position: relative;
 }
 
 /* 自定义标题栏 - 统一毛玻璃效果 */
@@ -174,6 +178,20 @@ body {
   display: flex;
   height: calc(100vh - 36px); /* 减去标题栏高度 */
   overflow: hidden;
+  position: relative;
+}
+
+.content-area {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.settings-container {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
 /* 侧边栏 - 毛玻璃效果 */
@@ -486,7 +504,6 @@ body {
   height: calc(100vh - 36px); /* 减去标题栏高度 */
   margin: 0; /* 无边距 */
   padding: 0;
-  overflow-y: auto;
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -494,12 +511,147 @@ body {
   box-shadow: none;
   border: none;
   position: relative;
+  overflow: hidden;
+}
+
+/* 全局滚动条样式 - 现代化设计 */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+/* 滚动条轨道 */
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 6px;
+}
+
+/* 滚动条滑块 */
+::-webkit-scrollbar-thumb {
+  background: rgba(180, 180, 180, 0.3);
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* 滚动条滑块悬停 */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(160, 160, 160, 0.5);
+  background-clip: content-box;
+}
+
+/* 滚动条滑块激活 */
+::-webkit-scrollbar-thumb:active {
+  background: rgba(140, 140, 140, 0.7);
+  background-clip: content-box;
+}
+
+/* 滚动条上下按钮 */
+::-webkit-scrollbar-button {
+  background: rgba(180, 180, 180, 0.2);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 12px;
+  height: 12px;
+}
+
+/* 上按钮 */
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(100,100,100,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='18 15 12 9 6 15'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* 下按钮 */
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(100,100,100,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* 左按钮 */
+::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(100,100,100,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 18 9 12 15 6'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* 右按钮 */
+::-webkit-scrollbar-button:single-button:horizontal:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(100,100,100,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* 滚动条按钮悬停 */
+::-webkit-scrollbar-button:hover {
+  background-color: rgba(160, 160, 160, 0.3);
+}
+
+/* 滚动条按钮激活 */
+::-webkit-scrollbar-button:active {
+  background-color: rgba(140, 140, 140, 0.4);
+  transform: scale(0.95);
+}
+
+/* 滚动条角落 */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 深色模式滚动条 */
+body.dark-mode ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: rgba(80, 80, 80, 0.4);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.6);
+  background-clip: content-box;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:active {
+  background: rgba(120, 120, 120, 0.8);
+  background-clip: content-box;
+}
+
+/* 深色模式滚动条按钮 */
+body.dark-mode ::-webkit-scrollbar-button {
+  background: rgba(80, 80, 80, 0.3);
+}
+
+body.dark-mode ::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(200,200,200,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='18 15 12 9 6 15'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body.dark-mode ::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(200,200,200,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body.dark-mode ::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(200,200,200,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 18 9 12 15 6'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body.dark-mode ::-webkit-scrollbar-button:single-button:horizontal:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(200,200,200,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body.dark-mode ::-webkit-scrollbar-button:hover {
+  background-color: rgba(100, 100, 100, 0.4);
+}
+
+body.dark-mode ::-webkit-scrollbar-button:active {
+  background-color: rgba(120, 120, 120, 0.5);
+  transform: scale(0.95);
+}
+
+body.dark-mode ::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* 内容区域 */
 .content-area {
   height: 100%;
-  overflow-y: auto;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 0;
   transform: translateX(30px) scale(0.95);
@@ -844,13 +996,16 @@ body {
 
 /* 隐藏文件输入框 */
 .hidden-file-input {
-  position: absolute;
+  position: fixed;
+  top: -100px;
+  left: -100px;
   width: 1px;
   height: 1px;
   padding: 0;
-  margin: -1px;
+  margin: 0;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  opacity: 0;
+  pointer-events: none;
   border: 0;
 }
 
@@ -888,7 +1043,6 @@ body {
 }
 
 .btn-primary:hover {
-  transform: translateY(-3px) scale(1.02);
   box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
   background: linear-gradient(135deg, #5a6fd8 0%, #6a42a0 100%);
 }
@@ -901,7 +1055,6 @@ body {
 
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 1);
-  transform: translateY(-3px) scale(1.02);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   border-color: rgba(102, 126, 234, 0.3);
 }
@@ -1221,6 +1374,10 @@ body {
   background-color: transparent;
   padding: 20px;
   overflow-y: auto;
+  height: 100%;
+  box-sizing: border-box;
+  min-height: 0; /* 确保flex项目可以缩小 */
+  -webkit-overflow-scrolling: touch; /* 确保平滑滚动 */
 }
 
 /* 设置标签页 */
@@ -2658,7 +2815,6 @@ body.dark-mode .opacity-control span {
 .background-preview:hover {
   border-color: #667eea;
   background: rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
 }
 
@@ -3679,7 +3835,7 @@ body.dark-mode .contact-action:hover {
 .copy-btn:active,
 .edit-btn:active,
 .delete-btn:active {
-  transform: scale(0.95);
+  /* 移除transform效果，避免页面滚动 */
 }
 
 /* 深色模式按钮发光效果 */
@@ -4300,4 +4456,166 @@ body.dark-mode .prompt-content p {
 .send-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 自定义弹窗样式 */
+.custom-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease;
+}
+
+.custom-modal-content {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1001;
+}
+
+.custom-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.custom-modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.custom-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #718096;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.custom-modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #2d3748;
+}
+
+.custom-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.custom-modal-message {
+  font-size: 16px;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.custom-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 头像裁剪弹窗样式 */
+.crop-modal-content {
+  max-width: 800px;
+  width: 95%;
+  max-height: 90vh;
+}
+
+.crop-modal-body {
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* 深色模式自定义弹窗 */
+body.dark-mode .custom-modal-content {
+  background: rgba(45, 45, 45, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .custom-modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .custom-modal-title {
+  color: #ffffff;
+}
+
+body.dark-mode .custom-modal-close {
+  color: #a0aec0;
+}
+
+body.dark-mode .custom-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+body.dark-mode .custom-modal-message {
+  color: #e2e8f0;
+}
+
+body.dark-mode .custom-modal-footer {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 弹窗动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+    scale: 0.95;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    scale: 1;
+  }
 }
