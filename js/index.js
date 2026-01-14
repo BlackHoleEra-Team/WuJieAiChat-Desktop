@@ -835,6 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSettingsPage()
   initBackgroundImage()
   initBackgroundOpacity()
+  initMessageInputKeyboard()
 })
 
 // 个人资料页面功能
@@ -1575,6 +1576,91 @@ function saveModalCroppedAvatar(canvas) {
   }
 }
 
+// 聊天设置功能
+function initChatSettings() {
+  // 获取DOM元素
+  const enableDelaySwitch = document.getElementById('enable-delay-switch')
+  const enableDelayCheckbox = document.getElementById('enable-delay-checkbox')
+  const delayTimeInput = document.getElementById('delay-time-input')
+  const saveChatConfigBtn = document.getElementById('save-chat-config')
+  
+  if (!enableDelaySwitch || !enableDelayCheckbox || !delayTimeInput || !saveChatConfigBtn) {
+    return
+  }
+  
+  // 检查是否已经初始化过，避免重复绑定事件
+  if (enableDelaySwitch.dataset.initialized === 'true') {
+    // 只更新UI，不重新绑定事件
+    loadChatSettings()
+    return
+  }
+  
+  // 标记为已初始化
+  enableDelaySwitch.dataset.initialized = 'true'
+  
+  // 从本地存储加载聊天设置
+  function loadChatSettings() {
+    const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+    const isEnabled = chatSettings.enableDelay || false
+    const delayTime = chatSettings.delayTime || 3
+    
+    // 更新UI
+    enableDelayCheckbox.checked = isEnabled
+    if (isEnabled) {
+      enableDelaySwitch.classList.add('active')
+    } else {
+      enableDelaySwitch.classList.remove('active')
+    }
+    
+    delayTimeInput.value = delayTime
+    
+    // 根据开关状态更新输入框和保存按钮的禁用状态
+    updateChatSettingControls(isEnabled)
+  }
+  
+  // 更新控制元素的禁用状态
+  function updateChatSettingControls(isEnabled) {
+    delayTimeInput.disabled = !isEnabled
+    saveChatConfigBtn.disabled = !isEnabled
+  }
+  
+  // 保存聊天设置到本地存储
+  function saveChatSettings() {
+    const isEnabled = enableDelayCheckbox.checked
+    const delayTime = parseInt(delayTimeInput.value) || 3
+    
+    const chatSettings = {
+      enableDelay: isEnabled,
+      delayTime: delayTime
+    }
+    
+    localStorage.setItem('chatSettings', JSON.stringify(chatSettings))
+    customModal.alert('聊天配置已保存！')
+  }
+  
+  // 处理开关点击事件
+  enableDelaySwitch.addEventListener('click', () => {
+    const isEnabled = !enableDelayCheckbox.checked
+    enableDelayCheckbox.checked = isEnabled
+    
+    if (isEnabled) {
+      enableDelaySwitch.classList.add('active')
+    } else {
+      enableDelaySwitch.classList.remove('active')
+    }
+    
+    updateChatSettingControls(isEnabled)
+  })
+  
+  // 处理保存按钮点击事件
+  saveChatConfigBtn.addEventListener('click', () => {
+    saveChatSettings()
+  })
+  
+  // 初始化加载设置
+  loadChatSettings()
+}
+
 // 防止意外缩放的保护机制
 document.addEventListener('keydown', (e) => {
   // 防止 Ctrl + 加号/减号缩放
@@ -1638,10 +1724,28 @@ function initSettingsPage() {
         console.log('切换到通用设置标签页，重新初始化下拉菜单')
       }, 50)
     }
+    // 如果切换到聊天设置标签页，重新初始化聊天设置
+    if (targetTab === 'chat-settings') {
+      // 延迟初始化，确保DOM已经更新
+      setTimeout(() => {
+        // 先检查DOM元素是否存在
+        const enableDelaySwitch = document.getElementById('enable-delay-switch')
+        if (enableDelaySwitch) {
+          initChatSettings()
+          console.log('切换到聊天设置标签页，重新初始化聊天设置')
+        } else {
+          console.warn('聊天设置元素未找到，延迟重试')
+          setTimeout(() => {
+            initChatSettings()
+            console.log('延迟重试：切换到聊天设置标签页，重新初始化聊天设置')
+          }, 100)
+        }
+      }, 50)
+    }
   }
   
-  // 开关切换功能
-  const toggleSwitches = document.querySelectorAll('.toggle-switch')
+  // 开关切换功能 - 只处理没有特定ID的开关
+  const toggleSwitches = document.querySelectorAll('.toggle-switch:not(#enable-delay-switch)')
   toggleSwitches.forEach(switchEl => {
     switchEl.addEventListener('click', () => {
       switchEl.classList.toggle('active')
@@ -2228,6 +2332,18 @@ function initCustomDropdowns() {
     animationSelected.textContent = animationTextMap[savedAnimation] || '滑动'
   }
   
+  // 初始化发送消息快捷键选择器的默认值
+  const sendShortcutSelected = document.getElementById('send-shortcut-selected')
+  if (sendShortcutSelected) {
+    const savedShortcut = localStorage.getItem('sendMessageShortcut') || 'ctrl+enter'
+    // 将快捷键类型映射为显示文本
+    const shortcutTextMap = {
+      'ctrl+enter': 'Ctrl+Enter',
+      'enter': 'Enter'
+    }
+    sendShortcutSelected.textContent = shortcutTextMap[savedShortcut] || 'Ctrl+Enter'
+  }
+  
   // 初始化背景样式选择器的默认值
   const backgroundSelected = document.getElementById('background-type-selected')
   if (backgroundSelected) {
@@ -2317,6 +2433,11 @@ function initCustomDropdowns() {
           })
         }
         
+        // 如果是发送消息快捷键选择器，保存到localStorage
+        if (selected.id === 'send-shortcut-selected') {
+          localStorage.setItem('sendMessageShortcut', value)
+        }
+        
         // 如果是背景样式选择器，保存到localStorage并立即应用
         if (selected.id === 'background-type-selected') {
           localStorage.setItem('backgroundType', value)
@@ -2338,6 +2459,31 @@ function initCustomDropdowns() {
           options.style.display = 'none'
         }, 300)
       })
+    }
+  })
+}
+
+// 初始化消息输入框的键盘事件监听
+function initMessageInputKeyboard() {
+  const messageInput = document.getElementById('message-input')
+  if (!messageInput) return
+  
+  messageInput.addEventListener('keydown', (e) => {
+    // 获取用户选择的发送消息快捷键
+    const sendShortcut = localStorage.getItem('sendMessageShortcut') || 'ctrl+enter'
+    
+    // 根据用户选择的快捷键处理发送消息
+    if (
+      (sendShortcut === 'enter' && e.key === 'Enter' && !e.ctrlKey) ||
+      (sendShortcut === 'ctrl+enter' && e.key === 'Enter' && e.ctrlKey)
+    ) {
+      // 阻止默认行为
+      e.preventDefault()
+      // 触发发送按钮点击事件
+      const sendBtn = document.getElementById('send-btn')
+      if (sendBtn && !sendBtn.disabled) {
+        sendBtn.click()
+      }
     }
   })
 }
@@ -2486,36 +2632,50 @@ function initBackgroundOpacity() {
 
 // 更新聊天背景遮罩透明度
 function updateBackgroundOpacity(opacity) {
-  const chatHeader = document.querySelector('.chat-header')
-  const chatMessagesBg = document.querySelector('.chat-messages-bg')
-  const chatInputArea = document.querySelector('.chat-input-area')
+  // 获取所有聊天页面的相关元素
+  const chatHeaders = document.querySelectorAll('.chat-header')
+  const chatMessagesBgs = document.querySelectorAll('.chat-messages-bg')
+  const chatInputAreas = document.querySelectorAll('.chat-input-area')
   
   // 检查是否为深色模式
   const isDarkMode = document.body.classList.contains('dark-mode')
   
-  if (chatHeader) {
-    if (isDarkMode) {
-      chatHeader.style.background = `rgba(30, 30, 30, ${opacity})`
-    } else {
-      chatHeader.style.background = `rgba(255, 255, 255, ${opacity})`
-    }
-  }
+  // 深色模式下的正常颜色值
+  const darkModeHeaderColor = `rgba(30, 30, 30, ${opacity})`
+  const darkModeMessagesColor = `linear-gradient(135deg, rgba(30, 30, 30, ${opacity}) 0%, rgba(40, 40, 40, ${opacity}) 100%)`
   
-  if (chatMessagesBg) {
-    if (isDarkMode) {
-      chatMessagesBg.style.background = `linear-gradient(135deg, rgba(30, 30, 30, ${opacity * 0.625}) 0%, rgba(40, 40, 40, ${opacity * 0.625}) 100%)`
-    } else {
-      chatMessagesBg.style.background = `linear-gradient(135deg, rgba(255, 255, 255, ${opacity}) 0%, rgba(240, 240, 240, ${opacity}) 100%)`
-    }
-  }
+  // 浅色模式下的颜色值
+  const lightModeHeaderColor = `rgba(255, 255, 255, ${opacity})`
+  const lightModeMessagesColor = `linear-gradient(135deg, rgba(255, 255, 255, ${opacity}) 0%, rgba(240, 240, 240, ${opacity}) 100%)`
   
-  if (chatInputArea) {
+  // 更新所有聊天头部
+  chatHeaders.forEach(chatHeader => {
     if (isDarkMode) {
-      chatInputArea.style.background = `rgba(30, 30, 30, ${opacity})`
+      chatHeader.style.background = darkModeHeaderColor
     } else {
-      chatInputArea.style.background = `rgba(255, 255, 255, ${opacity})`
+      chatHeader.style.background = lightModeHeaderColor
     }
-  }
+  })
+  
+  // 更新所有聊天消息背景
+  chatMessagesBgs.forEach(chatMessagesBg => {
+    if (isDarkMode) {
+      chatMessagesBg.style.background = darkModeMessagesColor
+    } else {
+      chatMessagesBg.style.background = lightModeMessagesColor
+    }
+  })
+  
+  // 更新所有聊天输入区域
+  chatInputAreas.forEach(chatInputArea => {
+    if (isDarkMode) {
+      chatInputArea.style.background = darkModeHeaderColor
+    } else {
+      chatInputArea.style.background = lightModeHeaderColor
+    }
+  })
+  
+  // 移除对消息输入框的背景色设置，让它继承容器背景，保持与容器融为一体
 }
 
 // 应用背景图片
@@ -2565,12 +2725,24 @@ function updateBackgroundPreview(imageDataUrl) {
 
 // 移除背景图片
 function removeBackgroundImage() {
+  // 清空背景图片相关样式
   document.body.style.backgroundImage = ''
   document.body.style.backgroundSize = ''
   document.body.style.backgroundPosition = ''
   document.body.style.backgroundRepeat = ''
   document.body.style.backgroundAttachment = ''
   
+  // 根据当前主题模式设置正确的背景色
+  const isDarkMode = document.body.classList.contains('dark-mode')
+  if (isDarkMode) {
+    // 深色模式下设置深色背景
+    document.body.style.background = '#1e1e1e'
+  } else {
+    // 浅色模式下设置浅色背景
+    document.body.style.background = '#e8e8e8'
+  }
+  
+  // 移除背景预览
   const backgroundPreview = document.getElementById('background-preview')
   if (backgroundPreview) {
     const previewImg = backgroundPreview.querySelector('img')
@@ -2580,6 +2752,7 @@ function removeBackgroundImage() {
     backgroundPreview.classList.remove('has-image')
   }
   
+  // 移除本地存储的背景图片
   localStorage.removeItem('customBackground')
 }
 
@@ -2597,6 +2770,28 @@ function toggleTheme(mode) {
   
   // 保存主题设置到本地存储
   localStorage.setItem('appTheme', mode)
+  
+  // 检查是否有自定义背景图片（更严格的判断）
+  const customBackground = localStorage.getItem('customBackground')
+  const hasCustomBackground = customBackground && customBackground !== ''
+  
+  // 如果没有自定义背景图片，根据主题设置正确的背景色
+  if (!hasCustomBackground) {
+    if (mode === 'dark') {
+      // 深色模式下设置深色背景
+      document.body.style.backgroundColor = '#1e1e1e'
+      // 确保背景图片被清空
+      document.body.style.backgroundImage = ''
+    } else {
+      // 浅色模式下设置浅色背景
+      document.body.style.backgroundColor = '#e8e8e8'
+      // 确保背景图片被清空
+      document.body.style.backgroundImage = ''
+    }
+  } else {
+    // 如果有自定义背景图片，确保背景色不影响显示
+    document.body.style.backgroundColor = 'transparent'
+  }
   
   // 强制重排，确保主题立即应用
   document.body.offsetHeight
@@ -2870,7 +3065,10 @@ function updateChatPage() {
     });
     
     // 禁用输入区域
-    if (messageInput) messageInput.disabled = true;
+    if (messageInput) {
+      messageInput.disabled = true;
+      messageInput.placeholder = '请先创建联系人才能发送消息...';
+    }
     if (sendBtn) sendBtn.disabled = true;
     if (chatInputArea) chatInputArea.classList.add('disabled');
     
@@ -2884,7 +3082,10 @@ function updateChatPage() {
     noContactPrompt.style.display = 'none';
     
     // 启用输入区域
-    if (messageInput) messageInput.disabled = false;
+    if (messageInput) {
+      messageInput.disabled = false;
+      messageInput.placeholder = '输入消息...';
+    }
     if (sendBtn) sendBtn.disabled = false;
     if (chatInputArea) chatInputArea.classList.remove('disabled');
     
@@ -3600,12 +3801,20 @@ function switchToContactChat(contactId) {
   
   // 更新聊天头部
   const chatName = document.querySelector('.chat-name');
+  const chatStatus = document.querySelector('.chat-status');
   const chatAvatar = document.querySelector('.chat-avatar img');
   const chatHeader = document.querySelector('.chat-header');
   
   if (chatName) chatName.textContent = contact.nickname;
+  if (chatStatus) chatStatus.textContent = ''; // 移除提供商和模型名显示
   if (chatAvatar) chatAvatar.src = contact.avatar;
   if (chatHeader) chatHeader.setAttribute('data-contact-id', contact.id);
+  
+  // 更新输入框的placeholder
+  const messageInput = document.getElementById('message-input');
+  if (messageInput) {
+    messageInput.placeholder = '输入消息...';
+  }
   
   // 加载聊天历史
   loadContactChatHistory(contactId);
@@ -3652,6 +3861,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSidebarTabs();
   initProfilePage();
   initSettingsPage();
+  initMessageInputKeyboard();
   
   // 初始化联系人功能
   setTimeout(() => {
