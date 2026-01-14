@@ -1745,7 +1745,7 @@ function initSettingsPage() {
   }
   
   // 开关切换功能 - 只处理没有特定ID的开关
-  const toggleSwitches = document.querySelectorAll('.toggle-switch:not(#enable-delay-switch)')
+  const toggleSwitches = document.querySelectorAll('.toggle-switch:not(#enable-delay-switch):not(#system-theme-switch)')
   toggleSwitches.forEach(switchEl => {
     switchEl.addEventListener('click', () => {
       switchEl.classList.toggle('active')
@@ -1818,18 +1818,24 @@ function initSettingsPage() {
   initClearDataFunctions()
   modeItems.forEach(item => {
     item.addEventListener('click', () => {
-      // 移除所有模式的激活状态
-      modeItems.forEach(mode => {
-        mode.classList.remove('active')
-      })
-      // 激活当前模式
-      item.classList.add('active')
+      // 获取当前系统主题开关状态
+      const isSystemThemeEnabled = localStorage.getItem('isSystemThemeEnabled') === 'true'
       
-      // 获取选中的模式
-      const mode = item.getAttribute('data-mode')
-      
-      // 切换主题
-      toggleTheme(mode)
+      // 只有在系统主题开关关闭时，才激活固定模式
+      if (!isSystemThemeEnabled) {
+        // 移除所有模式的激活状态
+        modeItems.forEach(mode => {
+          mode.classList.remove('active')
+        })
+        // 激活当前模式
+        item.classList.add('active')
+        
+        // 获取选中的模式
+        const mode = item.getAttribute('data-mode')
+        
+        // 切换主题
+        toggleTheme(mode, false)
+      }
     })
   })
   
@@ -2534,23 +2540,112 @@ function applyBackgroundStyle(type) {
   }
 }
 
+// 检测系统主题
+function isSystemDarkMode() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
 // 初始化主题
 function initTheme() {
   // 从本地存储获取主题设置
   const savedMode = localStorage.getItem('appTheme') || 'light'
+  const isSystemThemeEnabled = localStorage.getItem('isSystemThemeEnabled') === 'true'
   
   // 应用主题
-  toggleTheme(savedMode)
+  toggleTheme(savedMode, isSystemThemeEnabled)
   
   // 更新UI状态
   const modeItems = document.querySelectorAll('.mode-item')
   modeItems.forEach(item => {
     item.classList.remove('active')
   })
-  const activeModeItem = document.querySelector(`[data-mode="${savedMode}"]`)
-  if (activeModeItem) {
-    activeModeItem.classList.add('active')
+  
+  // 如果启用了系统主题，不激活任何固定模式
+  if (!isSystemThemeEnabled) {
+    const activeModeItem = document.querySelector(`[data-mode="${savedMode}"]`)
+    if (activeModeItem) {
+      activeModeItem.classList.add('active')
+    }
   }
+  
+  // 更新系统主题开关状态
+  const systemThemeSwitch = document.getElementById('system-theme-switch')
+  const systemThemeCheckbox = document.getElementById('system-theme-checkbox')
+  if (systemThemeSwitch && systemThemeCheckbox) {
+    systemThemeCheckbox.checked = isSystemThemeEnabled
+    if (isSystemThemeEnabled) {
+      systemThemeSwitch.classList.add('active')
+    } else {
+      systemThemeSwitch.classList.remove('active')
+    }
+  }
+  
+  // 添加系统主题变化监听器
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  mediaQuery.addEventListener('change', (e) => {
+    // 只有当启用了系统主题时，才跟随系统变化
+    const isSystemEnabled = localStorage.getItem('isSystemThemeEnabled') === 'true'
+    if (isSystemEnabled) {
+      const savedMode = localStorage.getItem('appTheme') || 'light'
+      toggleTheme(savedMode, true)
+    }
+  })
+  
+  // 初始化系统主题开关事件
+  initSystemThemeSwitch()
+}
+
+// 初始化系统主题开关
+function initSystemThemeSwitch() {
+  // 使用setTimeout确保DOM元素已经完全加载
+  setTimeout(() => {
+    const systemThemeSwitch = document.getElementById('system-theme-switch')
+    const systemThemeCheckbox = document.getElementById('system-theme-checkbox')
+    
+    if (!systemThemeSwitch || !systemThemeCheckbox) {
+      console.warn('系统主题开关元素未找到')
+      return
+    }
+    
+    // 确保只添加一次事件监听器
+    if (systemThemeSwitch.dataset.initialized) {
+      return
+    }
+    systemThemeSwitch.dataset.initialized = 'true'
+    
+    systemThemeSwitch.addEventListener('click', () => {
+      const isEnabled = !systemThemeCheckbox.checked
+      systemThemeCheckbox.checked = isEnabled
+      
+      if (isEnabled) {
+        systemThemeSwitch.classList.add('active')
+      } else {
+        systemThemeSwitch.classList.remove('active')
+      }
+      
+      // 保存设置
+      localStorage.setItem('isSystemThemeEnabled', isEnabled)
+      
+      // 应用主题
+      const savedMode = localStorage.getItem('appTheme') || 'light'
+      toggleTheme(savedMode, isEnabled)
+      
+      // 更新模式选择项的激活状态
+      const modeItems = document.querySelectorAll('.mode-item')
+      modeItems.forEach(item => {
+        if (isEnabled) {
+          item.classList.remove('active')
+        } else {
+          const currentMode = localStorage.getItem('appTheme') || 'light'
+          if (item.getAttribute('data-mode') === currentMode) {
+            item.classList.add('active')
+          } else {
+            item.classList.remove('active')
+          }
+        }
+      })
+    })
+  }, 100)
 }
 
 // 初始化背景图片功能
@@ -2757,12 +2852,18 @@ function removeBackgroundImage() {
 }
 
 // 切换主题函数
-function toggleTheme(mode) {
+function toggleTheme(mode, isSystemThemeEnabled = false) {
   // 移除所有过渡效果，防止快速切换时的动画冲突
   document.body.style.transition = 'none'
   
+  // 确定实际应用的主题
+  let actualMode = mode
+  if (isSystemThemeEnabled) {
+    actualMode = isSystemDarkMode() ? 'dark' : 'light'
+  }
+  
   // 应用主题
-  if (mode === 'dark') {
+  if (actualMode === 'dark') {
     document.body.classList.add('dark-mode')
   } else {
     document.body.classList.remove('dark-mode')
@@ -2777,7 +2878,7 @@ function toggleTheme(mode) {
   
   // 如果没有自定义背景图片，根据主题设置正确的背景色
   if (!hasCustomBackground) {
-    if (mode === 'dark') {
+    if (actualMode === 'dark') {
       // 深色模式下设置深色背景
       document.body.style.backgroundColor = '#1e1e1e'
       // 确保背景图片被清空
