@@ -20,7 +20,7 @@
 
 ## 许可证
 
-UNLICENSED
+Copyright © 2025 BlackHoleEraTeam All Rights Reserved 
 
 ## 作者
 
