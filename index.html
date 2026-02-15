@@ -5,11 +5,11 @@
   <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
   <meta
     http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'"
+    content="default-src 'self'; script-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; connect-src 'self' https://dashscope.aliyuncs.com"
   />
   <meta
     http-equiv="X-Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'"
+    content="default-src 'self'; script-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; connect-src 'self' https://dashscope.aliyuncs.com"
   />
   <title>无界</title>
   <link rel="stylesheet" href="./css/index.css" />
@@ -17,6 +17,20 @@
   <link rel="stylesheet" href="./node_modules/cropperjs/dist/cropper.css" />
 </head>
 <body>
+  <!-- 启动动画 -->
+  <div id="splash-screen" class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo">
+        <img src="images/WuJieAiChat.png" alt="无界" width="80" height="80">
+      </div>
+      <div class="splash-title">无界</div>
+      <div class="splash-subtitle">智能聊天助手</div>
+      <div class="splash-loader">
+        <div class="loader-bar"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="title-bar" id="titleBar">
     <div class="title-bar-content">
       <div class="title-section">
@@ -841,6 +855,7 @@
   <script src="./node_modules/jquery-cropper/dist/jquery-cropper.min.js"></script>
   <!-- 引入 crypto-js 用于加密 -->
   <script src="./node_modules/crypto-js/crypto-js.js"></script>
+  <script src="./js/aliyun-api.js"></script>
   <script src="./js/index.js"></script>
   <script>
     // 自定义协议处理

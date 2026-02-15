@@ -2194,6 +2194,151 @@ body.dark-mode .contact-last-msg .msg-time {
   margin-bottom: 0;
 }
 
+/* 启动动画样式 */
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.splash-screen.hidden {
+  opacity: 0;
+  transform: scale(1.1);
+  pointer-events: none;
+}
+
+.splash-content {
+  text-align: center;
+  animation: fadeInUp 0.8s ease-out;
+  background: white;
+  padding: 60px 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.splash-logo {
+  margin-bottom: 30px;
+  animation: bounceIn 1s ease-out;
+}
+
+.splash-logo img {
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 3px solid #f1f5f9;
+}
+
+.splash-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 10px;
+  letter-spacing: -0.5px;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.splash-subtitle {
+  font-size: 1.1rem;
+  color: #64748b;
+  margin-bottom: 40px;
+  font-weight: 400;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.splash-loader {
+  width: 200px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+  animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+.loader-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 2px;
+  animation: loading 2s ease-in-out infinite;
+}
+
+/* 动画定义 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 深色模式启动动画 */
+body.dark-mode .splash-screen {
+  background: #0f172a;
+}
+
+body.dark-mode .splash-content {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .splash-title {
+  color: #f1f5f9;
+}
+
+body.dark-mode .splash-subtitle {
+  color: #94a3b8;
+}
+
+body.dark-mode .splash-loader {
+  background: #334155;
+}
+
+body.dark-mode .splash-logo img {
+  border-color: #334155;
+}
+
 /* 小尺寸添加密钥按钮 */
 .add-key-btn-small {
   background-color: #667eea;
@@ -3264,6 +3409,9 @@ body.dark-mode .about-copyright {
 /* 用户消息 */
 .user-message {
   justify-content: flex-end;
+  flex-direction: row-reverse;
+  margin-left: auto;
+  max-width: 85%;
 }
 
 .message-avatar {
@@ -3335,6 +3483,187 @@ body.dark-mode .about-copyright {
 
 .user-message .message-time {
   color: rgba(255, 255, 255, 0.7);
+}
+
+/* 深度思考内容 */
+.thinking-content {
+  margin-top: 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(102, 126, 234, 0.15);
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+  transition: all 0.3s ease;
+}
+
+.thinking-content:hover {
+  box-shadow: 0 6px 24px rgba(102, 126, 234, 0.15);
+  border-color: rgba(102, 126, 234, 0.25);
+}
+
+.thinking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: rgba(102, 126, 234, 0.1);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+  font-size: 13px;
+  font-weight: 600;
+  color: #667eea;
+  letter-spacing: 0.5px;
+}
+
+.thinking-toggle {
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.25);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #667eea;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.thinking-toggle:hover {
+  background: rgba(102, 126, 234, 0.25);
+  border-color: rgba(102, 126, 234, 0.4);
+  color: #5a67d8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.thinking-toggle:active {
+  transform: translateY(0);
+}
+
+.thinking-text {
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a5568;
+  background: rgba(255, 255, 255, 0.7);
+  max-height: 250px;
+  overflow-y: auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.thinking-text::-webkit-scrollbar {
+  width: 6px;
+}
+
+.thinking-text::-webkit-scrollbar-track {
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 3px;
+}
+
+.thinking-text::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.3);
+  border-radius: 3px;
+}
+
+.thinking-text::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.5);
+}
+
+/* 思考文本默认显示状态 */
+.thinking-content .thinking-text {
+  display: block;
+}
+
+/* 思考文本隐藏状态 */
+.thinking-text-hidden {
+  display: none !important;
+}
+
+/* 深色模式下的深度思考样式 */
+body.dark-mode .thinking-content {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
+  border: 1px solid rgba(102, 126, 234, 0.25);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+}
+
+body.dark-mode .thinking-content:hover {
+  box-shadow: 0 6px 24px rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.35);
+}
+
+body.dark-mode .thinking-header {
+  background: rgba(102, 126, 234, 0.15);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+  color: #a3bffa;
+}
+
+body.dark-mode .thinking-toggle {
+  background: rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  color: #a3bffa;
+}
+
+body.dark-mode .thinking-toggle:hover {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: rgba(102, 126, 234, 0.5);
+  color: #c3dafe;
+}
+
+body.dark-mode .thinking-text {
+  background: rgba(30, 30, 40, 0.7);
+  color: #e2e8f0;
+}
+
+body.dark-mode .thinking-text::-webkit-scrollbar-track {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+body.dark-mode .thinking-text::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.4);
+}
+
+body.dark-mode .thinking-text::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.6);
+}
+
+/* 非流式模式下的思考内容样式 */
+.thinking-content-show {
+  margin: 12px 0;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  border-radius: 12px;
+  border-left: 4px solid #667eea;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a5568;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body.dark-mode .thinking-content-show {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
+  color: #e2e8f0;
+  border-left-color: #a3bffa;
+}
+
+/* 思考标题样式 */
+.thinking-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.thinking-icon {
+  opacity: 0.8;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
 }
 
 /* 消息输入区域 */
