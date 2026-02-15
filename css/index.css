@@ -181,6 +181,35 @@ body {
   position: relative;
 }
 
+/* 毛玻璃预渲染样式 - MagicOS 10通透模式启发 */
+.app-container.prerendered {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none; /* 启动动画期间不允许操作主界面 */
+  z-index: 1; /* 确保在启动动画下方但已经渲染 */
+}
+
+/* 移除预渲染状态，允许交互 */
+.app-container.ready {
+  pointer-events: auto;
+}
+
+/* 确保所有毛玻璃元素在启动动画期间就完全渲染 */
+.app-container.prerendered .title-bar,
+.app-container.prerendered .sidebar,
+.app-container.prerendered .main-content,
+.app-container.prerendered .profile-section,
+.app-container.prerendered .chat-contacts-popup,
+.app-container.prerendered .modal-content,
+.app-container.prerendered .custom-modal-content,
+.app-container.prerendered .key-card,
+.app-container.prerendered .count-card {
+  /* 确保毛玻璃效果立即渲染，不等待动画 */
+  will-change: auto;
+  transform: translateZ(0); /* 强制GPU渲染 */
+  backface-visibility: hidden;
+}
+
 .content-area {
   height: 100%;
   overflow: hidden;

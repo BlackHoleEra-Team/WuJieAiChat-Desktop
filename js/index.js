@@ -5,15 +5,35 @@ const $ = require('jquery')
 const Cropper = require('cropperjs')
 const CryptoJS = require('crypto-js')
 
-// 启动动画管理
+// 启动动画管理 - 支持毛玻璃预渲染
 class SplashScreen {
   constructor() {
     this.splashElement = document.getElementById('splash-screen');
+    this.appContainer = document.querySelector('.app-container');
     this.isVisible = true;
     this.minimumDisplayTime = 2000; // 最少显示2秒
     this.startTime = Date.now();
     this.hideRequested = false;
     console.log('启动动画初始化完成');
+    
+    // 确保主应用在启动动画期间就已经渲染好（毛玻璃预渲染）
+    this.prerenderApp();
+  }
+  
+  // 毛玻璃预渲染 - MagicOS 10通透模式启发
+  prerenderApp() {
+    console.log('开始预渲染毛玻璃效果...');
+    if (this.appContainer) {
+      // 确保主应用有prerendered类
+      if (!this.appContainer.classList.contains('prerendered')) {
+        this.appContainer.classList.add('prerendered');
+      }
+      
+      // 强制触发浏览器重新计算样式，确保毛玻璃效果立即渲染
+      this.appContainer.offsetHeight;
+      
+      console.log('毛玻璃预渲染完成');
+    }
   }
 
   // 显示启动动画
@@ -50,6 +70,9 @@ class SplashScreen {
         this.isVisible = false;
         console.log('启动动画已隐藏');
         
+        // 激活主应用，允许交互
+        this.activateApp();
+        
         // 动画完成后移除元素，释放资源
         setTimeout(() => {
           if (this.splashElement && this.splashElement.parentNode) {
@@ -61,6 +84,17 @@ class SplashScreen {
     }, remainingTime);
   }
   
+  // 激活主应用，移除预渲染状态，允许交互
+  activateApp() {
+    console.log('激活主应用...');
+    if (this.appContainer) {
+      // 移除prerendered类，添加ready类
+      this.appContainer.classList.remove('prerendered');
+      this.appContainer.classList.add('ready');
+      console.log('主应用已激活，毛玻璃预渲染效果已生效');
+    }
+  }
+  
   // 强制立即隐藏（用于超时情况）
   forceHide() {
     console.log('强制隐藏启动动画');
@@ -70,6 +104,9 @@ class SplashScreen {
       this.splashElement.classList.add('hidden');
       this.isVisible = false;
       console.log('启动动画已强制隐藏');
+      
+      // 激活主应用
+      this.activateApp();
       
       setTimeout(() => {
         if (this.splashElement && this.splashElement.parentNode) {
