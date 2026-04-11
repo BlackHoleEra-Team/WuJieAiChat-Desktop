@@ -5,35 +5,15 @@ const $ = require('jquery')
 const Cropper = require('cropperjs')
 const CryptoJS = require('crypto-js')
 
-// 启动动画管理 - 支持毛玻璃预渲染
+// 启动动画管理
 class SplashScreen {
   constructor() {
     this.splashElement = document.getElementById('splash-screen');
-    this.appContainer = document.querySelector('.app-container');
     this.isVisible = true;
     this.minimumDisplayTime = 2000; // 最少显示2秒
     this.startTime = Date.now();
     this.hideRequested = false;
     console.log('启动动画初始化完成');
-    
-    // 确保主应用在启动动画期间就已经渲染好（毛玻璃预渲染）
-    this.prerenderApp();
-  }
-  
-  // 毛玻璃预渲染 - MagicOS 10通透模式启发
-  prerenderApp() {
-    console.log('开始预渲染毛玻璃效果...');
-    if (this.appContainer) {
-      // 确保主应用有prerendered类
-      if (!this.appContainer.classList.contains('prerendered')) {
-        this.appContainer.classList.add('prerendered');
-      }
-      
-      // 强制触发浏览器重新计算样式，确保毛玻璃效果立即渲染
-      this.appContainer.offsetHeight;
-      
-      console.log('毛玻璃预渲染完成');
-    }
   }
 
   // 显示启动动画
@@ -70,9 +50,6 @@ class SplashScreen {
         this.isVisible = false;
         console.log('启动动画已隐藏');
         
-        // 激活主应用，允许交互
-        this.activateApp();
-        
         // 动画完成后移除元素，释放资源
         setTimeout(() => {
           if (this.splashElement && this.splashElement.parentNode) {
@@ -84,17 +61,6 @@ class SplashScreen {
     }, remainingTime);
   }
   
-  // 激活主应用，移除预渲染状态，允许交互
-  activateApp() {
-    console.log('激活主应用...');
-    if (this.appContainer) {
-      // 移除prerendered类，添加ready类
-      this.appContainer.classList.remove('prerendered');
-      this.appContainer.classList.add('ready');
-      console.log('主应用已激活，毛玻璃预渲染效果已生效');
-    }
-  }
-  
   // 强制立即隐藏（用于超时情况）
   forceHide() {
     console.log('强制隐藏启动动画');
@@ -104,9 +70,6 @@ class SplashScreen {
       this.splashElement.classList.add('hidden');
       this.isVisible = false;
       console.log('启动动画已强制隐藏');
-      
-      // 激活主应用
-      this.activateApp();
       
       setTimeout(() => {
         if (this.splashElement && this.splashElement.parentNode) {
@@ -988,6 +951,65 @@ function updateChatHeader(contact) {
   console.log(`聊天头部已更新为: ${contact.name || contact.nickname}`);
 }
 
+// 聊天菜单功能
+function initChatMenu() {
+  const menuBtn = document.getElementById('chat-menu-btn');
+  const menuDropdown = document.getElementById('chat-menu-dropdown');
+  const clearHistoryBtn = document.getElementById('clear-chat-history-btn');
+  
+  if (!menuBtn || !menuDropdown) return;
+  
+  // 点击菜单按钮切换下拉菜单
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuDropdown.classList.toggle('show');
+  });
+  
+  // 点击其他地方关闭下拉菜单
+  document.addEventListener('click', (e) => {
+    if (!menuBtn.contains(e.target) && !menuDropdown.contains(e.target)) {
+      menuDropdown.classList.remove('show');
+    }
+  });
+  
+  // 清除聊天记录功能
+  if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', async () => {
+      const chatHeader = document.querySelector('.chat-header');
+      const contactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
+      
+      if (!contactId) {
+        customModal.alert('请先选择一个联系人');
+        return;
+      }
+      
+      // 确认对话框
+      const confirmed = await customModal.confirm('确定要清除当前联系人的所有聊天记录吗？此操作不可恢复。');
+      if (!confirmed) return;
+      
+      try {
+        // 清空聊天记录文件
+        await saveChatHistory(contactId, []);
+        
+        // 清空界面显示
+        const chatMessages = document.getElementById('chat-messages');
+        if (chatMessages) {
+          chatMessages.innerHTML = '';
+        }
+        
+        customModal.alert('聊天记录已清除');
+        console.log('聊天记录已清除:', contactId);
+      } catch (error) {
+        console.error('清除聊天记录失败:', error);
+        customModal.alert('清除聊天记录失败: ' + error.message);
+      }
+      
+      // 关闭下拉菜单
+      menuDropdown.classList.remove('show');
+    });
+  }
+}
+
 // 联系人页面功能
 function initContactsPage() {
   const searchInput = document.getElementById('contacts-search')
@@ -1032,6 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initBackgroundImage()
     initBackgroundOpacity()
     initMessageInputKeyboard()
+    initChatMenu()
     
     console.log('所有功能模块初始化完成');
     
@@ -1056,6 +1079,84 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 300);
   }
 })
+
+// 保存用户头像到文件系统
+async function saveUserAvatar(avatarBase64) {
+  try {
+    if (!avatarBase64 || !avatarBase64.startsWith('data:image')) {
+      return 'images/app-icon.png'; // 返回默认头像路径
+    }
+
+    // 获取用户数据目录
+    const userDataDirs = await ipcRenderer.invoke('get-user-data-dirs');
+
+    // 生成唯一的文件名
+    const fileName = `user_avatar_${Date.now()}.png`;
+    const result = await ipcRenderer.invoke('save-image', avatarBase64, userDataDirs.userImgsPath, fileName);
+
+    if (result.success) {
+      // 返回相对于用户图片目录的路径
+      return `UserData/imgs/User/${fileName}`;
+    } else {
+      console.error('保存用户头像失败:', result.error);
+      return 'images/app-icon.png'; // 返回默认头像路径
+    }
+  } catch (error) {
+    console.error('保存用户头像失败:', error);
+    return 'images/app-icon.png'; // 返回默认头像路径
+  }
+}
+
+// 从文件系统加载用户头像
+async function loadUserAvatar(avatarPath) {
+  // 如果路径是相对路径（来自文件系统存储），则构建完整路径
+  if (avatarPath && avatarPath.startsWith('UserData/')) {
+    return await getUserDataPath(avatarPath);
+  }
+  // 如果是默认或其他路径，直接返回
+  return avatarPath || 'images/app-icon.png';
+}
+
+// 获取用户数据
+async function getUserData() {
+  const defaultData = {
+    username: '我的',
+    avatar: 'images/app-icon.png',
+    userId: 'user_' + Math.random().toString(36).substr(2, 8),
+    registerTime: new Date().toISOString().split('T')[0]
+  }
+
+  try {
+    const savedData = localStorage.getItem('userData')
+    const userData = savedData ? JSON.parse(savedData) : defaultData
+
+    // 如果头像是文件系统路径，则转换为可用的文件URL
+    if (userData.avatar && userData.avatar.startsWith('UserData/')) {
+      userData.avatar = await loadUserAvatar(userData.avatar);
+    }
+
+    return userData
+  } catch (error) {
+    console.error('加载用户数据失败：', error)
+    return defaultData
+  }
+}
+
+// 保存用户数据
+async function saveUserData(userData) {
+  try {
+    // 如果有头像数据，先保存到文件系统
+    let userDataToSave = {...userData};
+    if (userData.avatar && userData.avatar.startsWith('data:image')) {
+      const avatarPath = await saveUserAvatar(userData.avatar);
+      userDataToSave.avatar = avatarPath;
+    }
+
+    localStorage.setItem('userData', JSON.stringify(userDataToSave))
+  } catch (error) {
+    console.error('保存用户数据失败：', error)
+  }
+}
 
 // 个人资料页面功能
 function initProfilePage() {
@@ -1293,85 +1394,7 @@ function initProfilePage() {
     console.log('用户名已更新为：' + username)
     customModal.alert('用户名保存成功！')
   }
-  
-  // 获取用户数据
-  async function getUserData() {
-    const defaultData = {
-      username: '我的',
-      avatar: 'images/app-icon.png',
-      userId: 'user_' + Math.random().toString(36).substr(2, 8),
-      registerTime: new Date().toISOString().split('T')[0]
-    }
-    
-    try {
-      const savedData = localStorage.getItem('userData')
-      const userData = savedData ? JSON.parse(savedData) : defaultData
-      
-      // 如果头像是文件系统路径，则转换为可用的文件URL
-      if (userData.avatar && userData.avatar.startsWith('UserData/')) {
-        userData.avatar = await loadUserAvatar(userData.avatar);
-      }
-      
-      return userData
-    } catch (error) {
-      console.error('加载用户数据失败：', error)
-      return defaultData
-    }
-  }
-  
-  // 保存用户头像到文件系统
-  async function saveUserAvatar(avatarBase64) {
-    try {
-      if (!avatarBase64 || !avatarBase64.startsWith('data:image')) {
-        return 'images/app-icon.png'; // 返回默认头像路径
-      }
-      
-      // 获取用户数据目录
-      const userDataDirs = await ipcRenderer.invoke('get-user-data-dirs');
-      
-      // 生成唯一的文件名
-      const fileName = `user_avatar_${Date.now()}.png`;
-      const result = await ipcRenderer.invoke('save-image', avatarBase64, userDataDirs.userImgsPath, fileName);
-      
-      if (result.success) {
-        // 返回相对于用户图片目录的路径
-        return `UserData/imgs/User/${fileName}`;
-      } else {
-        console.error('保存用户头像失败:', result.error);
-        return 'images/app-icon.png'; // 返回默认头像路径
-      }
-    } catch (error) {
-      console.error('保存用户头像失败:', error);
-      return 'images/app-icon.png'; // 返回默认头像路径
-    }
-  }
-  
-  // 从文件系统加载用户头像
-  async function loadUserAvatar(avatarPath) {
-    // 如果路径是相对路径（来自文件系统存储），则构建完整路径
-    if (avatarPath && avatarPath.startsWith('UserData/')) {
-      return await getUserDataPath(avatarPath);
-    }
-    // 如果是默认或其他路径，直接返回
-    return avatarPath || 'images/app-icon.png';
-  }
-  
-  // 保存用户数据
-  async function saveUserData(userData) {
-    try {
-      // 如果有头像数据，先保存到文件系统
-      let userDataToSave = {...userData};
-      if (userData.avatar && userData.avatar.startsWith('data:image')) {
-        const avatarPath = await saveUserAvatar(userData.avatar);
-        userDataToSave.avatar = avatarPath;
-      }
-      
-      localStorage.setItem('userData', JSON.stringify(userDataToSave))
-    } catch (error) {
-      console.error('保存用户数据失败：', error)
-    }
-  }
-  
+
   // 加载用户数据 - 修复头像和用户名加载
 async function loadUserData() {
   const userData = await getUserData()
@@ -1897,87 +1920,149 @@ function saveModalCroppedAvatar(canvas) {
 
 // 聊天设置功能
 function initChatSettings() {
-  // 获取DOM元素
+  // 获取DOM元素 - 延迟发送设置
   const enableDelaySwitch = document.getElementById('enable-delay-switch')
   const enableDelayCheckbox = document.getElementById('enable-delay-checkbox')
   const delayTimeInput = document.getElementById('delay-time-input')
   const saveChatConfigBtn = document.getElementById('save-chat-config')
   
-  if (!enableDelaySwitch || !enableDelayCheckbox || !delayTimeInput || !saveChatConfigBtn) {
-    return
-  }
+  // 获取DOM元素 - 历史记录记忆设置
+  const historyMemoryToggle = document.getElementById('history-memory-toggle')
+  const historyMemoryCheckbox = document.getElementById('history-memory-checkbox')
+  const historyMemoryRounds = document.getElementById('history-memory-rounds')
+  const saveHistoryMemoryBtn = document.getElementById('save-history-memory-config')
   
-  // 检查是否已经初始化过，避免重复绑定事件
-  if (enableDelaySwitch.dataset.initialized === 'true') {
-    // 只更新UI，不重新绑定事件
-    loadChatSettings()
-    return
-  }
-  
-  // 标记为已初始化
-  enableDelaySwitch.dataset.initialized = 'true'
-  
-  // 从本地存储加载聊天设置
-  function loadChatSettings() {
-    const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
-    const isEnabled = chatSettings.enableDelay || false
-    const delayTime = chatSettings.delayTime || 3
-    
-    // 更新UI
-    enableDelayCheckbox.checked = isEnabled
-    if (isEnabled) {
-      enableDelaySwitch.classList.add('active')
+  // 初始化延迟发送设置
+  if (enableDelaySwitch && enableDelayCheckbox && delayTimeInput && saveChatConfigBtn) {
+    // 检查是否已经初始化过，避免重复绑定事件
+    if (enableDelaySwitch.dataset.initialized === 'true') {
+      // 只更新UI，不重新绑定事件
+      loadDelaySettings()
     } else {
-      enableDelaySwitch.classList.remove('active')
+      // 标记为已初始化
+      enableDelaySwitch.dataset.initialized = 'true'
+      
+      // 从本地存储加载延迟发送设置
+      function loadDelaySettings() {
+        const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+        const isEnabled = chatSettings.enableDelay || false
+        const delayTime = chatSettings.delayTime || 3
+        
+        // 更新UI
+        enableDelayCheckbox.checked = isEnabled
+        if (isEnabled) {
+          enableDelaySwitch.classList.add('active')
+        } else {
+          enableDelaySwitch.classList.remove('active')
+        }
+        
+        delayTimeInput.value = delayTime
+        
+        // 根据开关状态更新输入框和保存按钮的禁用状态
+        updateDelaySettingControls(isEnabled)
+      }
+      
+      // 更新控制元素的禁用状态
+      function updateDelaySettingControls(isEnabled) {
+        delayTimeInput.disabled = !isEnabled
+        saveChatConfigBtn.disabled = !isEnabled
+      }
+      
+      // 保存延迟发送设置到本地存储
+      function saveDelaySettings() {
+        const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+        chatSettings.enableDelay = enableDelayCheckbox.checked
+        chatSettings.delayTime = parseInt(delayTimeInput.value) || 3
+        
+        localStorage.setItem('chatSettings', JSON.stringify(chatSettings))
+        customModal.alert('聊天配置已保存！')
+      }
+      
+      // 处理开关点击事件
+      enableDelaySwitch.addEventListener('click', () => {
+        const isEnabled = !enableDelayCheckbox.checked
+        enableDelayCheckbox.checked = isEnabled
+        
+        if (isEnabled) {
+          enableDelaySwitch.classList.add('active')
+        } else {
+          enableDelaySwitch.classList.remove('active')
+        }
+        
+        updateDelaySettingControls(isEnabled)
+      })
+      
+      // 处理保存按钮点击事件
+      saveChatConfigBtn.addEventListener('click', () => {
+        saveDelaySettings()
+      })
+      
+      // 初始化加载设置
+      loadDelaySettings()
     }
-    
-    delayTimeInput.value = delayTime
-    
-    // 根据开关状态更新输入框和保存按钮的禁用状态
-    updateChatSettingControls(isEnabled)
   }
   
-  // 更新控制元素的禁用状态
-  function updateChatSettingControls(isEnabled) {
-    delayTimeInput.disabled = !isEnabled
-    saveChatConfigBtn.disabled = !isEnabled
-  }
-  
-  // 保存聊天设置到本地存储
-  function saveChatSettings() {
-    const isEnabled = enableDelayCheckbox.checked
-    const delayTime = parseInt(delayTimeInput.value) || 3
-    
-    const chatSettings = {
-      enableDelay: isEnabled,
-      delayTime: delayTime
-    }
-    
-    localStorage.setItem('chatSettings', JSON.stringify(chatSettings))
-    customModal.alert('聊天配置已保存！')
-  }
-  
-  // 处理开关点击事件
-  enableDelaySwitch.addEventListener('click', () => {
-    const isEnabled = !enableDelayCheckbox.checked
-    enableDelayCheckbox.checked = isEnabled
-    
-    if (isEnabled) {
-      enableDelaySwitch.classList.add('active')
+  // 初始化历史记录记忆设置
+  if (historyMemoryToggle && historyMemoryCheckbox && historyMemoryRounds && saveHistoryMemoryBtn) {
+    // 检查是否已经初始化过
+    if (historyMemoryToggle.dataset.initialized === 'true') {
+      loadHistoryMemorySettings()
     } else {
-      enableDelaySwitch.classList.remove('active')
+      // 标记为已初始化
+      historyMemoryToggle.dataset.initialized = 'true'
+      
+      // 从本地存储加载历史记录记忆设置
+      function loadHistoryMemorySettings() {
+        const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+        const isEnabled = chatSettings.enableHistoryMemory || false
+        const rounds = chatSettings.historyMemoryRounds || 10
+        
+        // 更新UI
+        historyMemoryCheckbox.checked = isEnabled
+        if (isEnabled) {
+          historyMemoryToggle.classList.add('active')
+          historyMemoryRounds.disabled = true
+        } else {
+          historyMemoryToggle.classList.remove('active')
+          historyMemoryRounds.disabled = false
+        }
+        
+        historyMemoryRounds.value = rounds
+      }
+      
+      // 保存历史记录记忆设置到本地存储
+      function saveHistoryMemorySettings() {
+        const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+        chatSettings.enableHistoryMemory = historyMemoryCheckbox.checked
+        chatSettings.historyMemoryRounds = parseInt(historyMemoryRounds.value) || 10
+        
+        localStorage.setItem('chatSettings', JSON.stringify(chatSettings))
+        customModal.alert('AI聊天历史记忆配置已保存！')
+      }
+      
+      // 处理开关点击事件
+      historyMemoryToggle.addEventListener('click', () => {
+        const isEnabled = !historyMemoryCheckbox.checked
+        historyMemoryCheckbox.checked = isEnabled
+        
+        if (isEnabled) {
+          historyMemoryToggle.classList.add('active')
+          historyMemoryRounds.disabled = true
+        } else {
+          historyMemoryToggle.classList.remove('active')
+          historyMemoryRounds.disabled = false
+        }
+      })
+      
+      // 处理保存按钮点击事件
+      saveHistoryMemoryBtn.addEventListener('click', () => {
+        saveHistoryMemorySettings()
+      })
+      
+      // 初始化加载设置
+      loadHistoryMemorySettings()
     }
-    
-    updateChatSettingControls(isEnabled)
-  })
-  
-  // 处理保存按钮点击事件
-  saveChatConfigBtn.addEventListener('click', () => {
-    saveChatSettings()
-  })
-  
-  // 初始化加载设置
-  loadChatSettings()
+  }
 }
 
 // 防止意外缩放的保护机制
@@ -2083,13 +2168,23 @@ function initSettingsPage() {
     const clearAllDataBtn = document.getElementById('clear-all-data-btn')
     const clearContactsBtn = document.getElementById('clear-contacts-btn')
     const clearUserDataBtn = document.getElementById('clear-user-data-btn')
-    
+
     // 清除全部数据
     if (clearAllDataBtn) {
-      clearAllDataBtn.addEventListener('click', (e) => {
+      clearAllDataBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        customModal.confirm('确定要清除所有数据吗？此操作不可逆！').then((result) => {
+        customModal.confirm('确定要清除所有数据吗？此操作不可逆！').then(async (result) => {
           if (result) {
+            // 删除所有联系人配置文件和聊天记录
+            try {
+              const deleteResult = await ipcRenderer.invoke('delete-all-contact-configs');
+              if (!deleteResult.success) {
+                console.error('删除所有联系人数据失败:', deleteResult.error);
+              }
+            } catch (error) {
+              console.error('删除所有联系人数据时出错:', error);
+            }
+
             // 清除所有localStorage数据
             localStorage.clear()
             // 重新加载页面
@@ -2098,15 +2193,26 @@ function initSettingsPage() {
         })
       })
     }
-    
+
     // 清除联系人数据
     if (clearContactsBtn) {
-      clearContactsBtn.addEventListener('click', (e) => {
+      clearContactsBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        customModal.confirm('确定要清除联系人数据吗？此操作不可逆！').then((result) => {
+        customModal.confirm('确定要清除联系人数据吗？此操作不可逆！').then(async (result) => {
           if (result) {
-            // 清除联系人数据
-            localStorage.removeItem('contacts')
+            // 删除所有联系人配置文件和聊天记录
+            try {
+              const deleteResult = await ipcRenderer.invoke('delete-all-contact-configs');
+              if (!deleteResult.success) {
+                console.error('删除所有联系人数据失败:', deleteResult.error);
+              }
+            } catch (error) {
+              console.error('删除所有联系人数据时出错:', error);
+            }
+
+            // 清空内存中的联系人数据
+            contacts = [];
+
             // 重新加载页面
             location.reload()
           }
@@ -3622,12 +3728,12 @@ function initCreateContactModal() {
   const websearchToggle = document.getElementById('websearch-toggle');
   const deepthinkToggle = document.getElementById('deepthink-toggle');
   const advancedToggle = document.getElementById('advanced-toggle');
-  
+
   // 滑块元素
   const topPSlider = document.getElementById('top-p-slider');
   const temperatureSlider = document.getElementById('temperature-slider');
   const thinkingbudgetSlider = document.getElementById('thinkingbudget-slider');
-  
+
   // 开关初始化
   [roleplayToggle, websearchToggle, deepthinkToggle, advancedToggle].forEach(toggle => {
     toggle.addEventListener('click', function() {
@@ -4270,6 +4376,7 @@ function editContact(id) {
       if (decryptedContact.deepthink) {
         document.getElementById('deepthink-toggle').classList.add('active');
       }
+      
       if (decryptedContact.advancedEnabled) {
         document.getElementById('advanced-toggle').classList.add('active');
         document.getElementById('advanced-options').style.display = 'block';
@@ -4290,8 +4397,8 @@ function editContact(id) {
 }
 
 // 删除联系人
-function deleteContact(id) {
-  customModal.confirm('确定要删除这个联系人吗？此操作不可撤销。', '确认删除').then((result) => {
+async function deleteContact(id) {
+  customModal.confirm('确定要删除这个联系人吗？此操作不可撤销。', '确认删除').then(async (result) => {
     if (result) {
       // 获取被删除的联系人信息
       const deletedContact = contacts.find(c => c.id === id);
@@ -4303,11 +4410,22 @@ function deleteContact(id) {
       const isCurrentlyChattingWithDeleted = currentContactId === id;
       const isInChatPage = currentActiveTab && currentActiveTab.getAttribute('data-tab') === 'chat';
       
-      // 删除联系人
+      // 先从文件系统中删除联系人配置和聊天记录
+      try {
+        const deleteResult = await ipcRenderer.invoke('delete-contact-config', id);
+        if (!deleteResult.success) {
+          console.error('删除联系人配置文件失败:', deleteResult.error);
+        }
+      } catch (error) {
+        console.error('删除联系人配置时出错:', error);
+      }
+      
+      // 从内存中删除联系人
       contacts = contacts.filter(c => c.id !== id);
-      saveContacts();
+      
+      // 更新UI
       renderContacts();
-      updatePopupContacts(); // 新增
+      updatePopupContacts();
       
       // 如果在聊天页面且正在与被删除的联系人聊天
       if (isInChatPage && isCurrentlyChattingWithDeleted) {
@@ -4422,6 +4540,57 @@ async function switchToContactChat(contactId) {
   updatePopupContacts();
 }
 
+// Markdown 渲染函数
+// 配置 marked 选项（只执行一次）
+if (typeof marked !== 'undefined') {
+  marked.setOptions({
+    breaks: true,  // 允许换行
+    gfm: true,     // GitHub Flavored Markdown
+    headerIds: false,  // 不生成 header id
+    mangle: false,     // 不转义邮件地址
+    sanitize: true     // 清理 HTML 标签，避免安全问题
+  });
+}
+
+function renderMarkdown(content) {
+  if (typeof marked === 'undefined') {
+    // 如果 marked 未加载，使用简单的换行处理
+    return content.replace(/\n/g, '<br>');
+  }
+  
+  try {
+    // 限制输入长度，避免过度处理
+    if (content.length > 10000) {
+      console.warn('Markdown 内容过长，截断处理:', content.length);
+      content = content.substring(0, 10000);
+    }
+    
+    const result = marked.parse(content);
+    // 安全检查：确保结果不是空或异常值
+    if (!result || typeof result !== 'string') {
+      console.warn('Markdown 解析结果异常，使用原始内容:', result);
+      return content.replace(/\n/g, '<br>');
+    }
+    
+    // 清理可能的危险标签或内容
+    let cleanedResult = result
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '');
+    
+    // 限制输出长度，避免显示问题
+    if (cleanedResult.length > 50000) {
+      console.warn('Markdown 输出过长，截断处理:', cleanedResult.length);
+      cleanedResult = cleanedResult.substring(0, 50000) + '...（内容过长已截断）';
+    }
+    
+    return cleanedResult;
+  } catch (error) {
+    console.error('Markdown 解析失败:', error);
+    return content.replace(/\n/g, '<br>');
+  }
+}
+
 // 加载联系人聊天历史
 async function loadContactChatHistory(contactId) {
   const chatMessagesContainer = document.getElementById('chat-messages');
@@ -4434,13 +4603,23 @@ async function loadContactChatHistory(contactId) {
   const messages = await loadChatHistoryFromStorage(contactId);
   console.log('加载聊天记录:', contactId, messages.length, '条消息');
   
+  // 调试：检查第一条消息的内容
+  if (messages.length > 0) {
+    console.log('第一条消息示例:', {
+      type: messages[0].type,
+      contentLength: messages[0].content?.length,
+      contentPreview: messages[0].content?.substring(0, 100),
+      hasThinkingContent: !!messages[0].thinkingContent
+    });
+  }
+  
   if (messages.length === 0) {
     // 没有聊天记录，直接返回
     return;
   }
   
-  // 渲染聊天记录 - 使用 Promise.all 等待所有异步操作完成
-  const promises = messages.map(async (message) => {
+  // 渲染聊天记录 - 使用 for 循环确保顺序和避免重复
+  for (const message of messages) {
     let messageHTML;
     
     if (message.type === 'system') {
@@ -4478,6 +4657,12 @@ async function loadContactChatHistory(contactId) {
         `;
       }
       
+      // AI 消息使用 Markdown 解析
+      const renderedContent = renderMarkdown(message.content);
+      
+      // 格式化时间显示
+      const displayTime = formatSmartDateTime(new Date(message.time));
+      
       messageHTML = `
         <div class="message ai-message" id="${message.id || 'msg-' + Date.now() + '-' + Math.random()}">
           <div class="message-avatar">
@@ -4485,8 +4670,8 @@ async function loadContactChatHistory(contactId) {
           </div>
           <div class="message-content">
             ${thinkingHTML}
-            <div class="message-text">${message.content.replace(/\n/g, '<br>')}</div>
-            <div class="message-time">${message.time}</div>
+            <div class="message-text markdown-content">${renderedContent}</div>
+            <div class="message-time">${displayTime}</div>
           </div>
         </div>
       `;
@@ -4497,14 +4682,17 @@ async function loadContactChatHistory(contactId) {
         avatarSrc = await getUserDataPath(avatarSrc);
       }
       
+      // 格式化时间显示
+      const displayTime = formatSmartDateTime(new Date(message.time));
+      
       messageHTML = `
         <div class="message user-message" id="${message.id || 'msg-' + Date.now() + '-' + Math.random()}">
-          <div class="message-content">
-            <div class="message-text">${message.content.replace(/\n/g, '<br>')}</div>
-            <div class="message-time">${message.time}</div>
-          </div>
           <div class="message-avatar">
             <img src="${avatarSrc}" alt="我" width="32" height="32">
+          </div>
+          <div class="message-content">
+            <div class="message-text">${message.content.replace(/\n/g, '<br>')}</div>
+            <div class="message-time">${displayTime}</div>
           </div>
         </div>
       `;
@@ -4513,10 +4701,7 @@ async function loadContactChatHistory(contactId) {
     if (messageHTML) {
       chatMessagesContainer.insertAdjacentHTML('beforeend', messageHTML);
     }
-  });
-  
-  // 等待所有消息渲染完成
-  await Promise.all(promises);
+  }
   
   // 滚动到底部
   chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
@@ -4674,6 +4859,65 @@ async function handleSendMessage() {
   messageInput.value = '';
   
   try {
+    // 创建阿里云API实例
+    const aliyunAPI = new AliyunAPI(apiKey);
+    
+    // 构建联系人配置
+    let systemPrompt = contact.systemPrompt || '';
+    
+    // 从全局设置中读取历史记录记忆配置
+    const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}');
+    const enableHistoryMemory = chatSettings.enableHistoryMemory || false;
+    const historyMemoryRounds = chatSettings.historyMemoryRounds || 10;
+    
+    // 加载历史记录并添加到system prompt
+    const chatHistory = await loadChatHistoryFromStorage(contact.id);
+    
+    if (chatHistory.length > 0) {
+      // 确定要获取的历史记录数量
+      // 开关开启：发送全部历史记录
+      // 开关关闭：只发送指定轮数的历史记录（一轮=用户+AI两条消息）
+      let recentHistory;
+      if (enableHistoryMemory) {
+        // 发送全部历史记录
+        recentHistory = chatHistory;
+        console.log('历史记录记忆：发送全部历史记录，共', chatHistory.length, '条消息');
+      } else {
+        // 只发送指定轮数（一轮=2条消息）
+        recentHistory = chatHistory.slice(-historyMemoryRounds * 2);
+        console.log('历史记录记忆：限制轮数为', historyMemoryRounds, '轮，共', recentHistory.length, '条消息');
+      }
+      
+      if (recentHistory.length > 0) {
+        // 构建历史记录文本
+        let historyText = '\n\n以下为你和用户的聊天记录：\n<记录>\n';
+        
+        recentHistory.forEach(msg => {
+          if (msg.type === 'user') {
+            historyText += `User: ${msg.content}\n`;
+          } else if (msg.type === 'ai') {
+            // 剔除深度思考内容，只保留实际回复
+            historyText += `AI: ${msg.content}\n`;
+          }
+        });
+        
+        historyText += '</记录>\n请根据以上聊天记录理解上下文，更好地回答用户的问题。';
+        
+        // 将历史记录添加到system prompt的最前面
+        systemPrompt = historyText + (systemPrompt ? '\n\n' + systemPrompt : '');
+        
+        console.log('已添加历史记录到system prompt，轮数:', enableHistoryMemory ? '全部' : historyMemoryRounds, '历史消息数:', recentHistory.length);
+      }
+    }
+    
+    const contactConfig = {
+      model: contact.model,
+      enableSearch: contact.websearch,
+      enableThinking: contact.deepthink,
+      systemPrompt: systemPrompt,
+      isRolePlay: contact.roleplay
+    };
+    
     // 构建消息历史
     const messages = [
       {
@@ -4681,18 +4925,6 @@ async function handleSendMessage() {
         content: message
       }
     ];
-    
-    // 创建阿里云API实例
-    const aliyunAPI = new AliyunAPI(apiKey);
-    
-    // 构建联系人配置
-    const contactConfig = {
-      model: contact.model,
-      enableSearch: contact.websearch,
-      enableThinking: contact.deepthink,
-      systemPrompt: contact.systemPrompt,
-      isRolePlay: contact.roleplay
-    };
     
     console.log('联系人配置:', contactConfig);
     
@@ -4730,7 +4962,7 @@ async function handleSendMessage() {
             // 完成回调
             console.log('深度思考+联网搜索完成');
             // 保存完整的AI回复（包括思考内容）
-            saveMessageToHistory('ai', aiContent, new Date().toLocaleTimeString(), thinkingContent);
+            saveMessageToHistory('ai', aiContent, new Date().toISOString(), thinkingContent);
           }
         );
       } else {
@@ -4794,7 +5026,7 @@ async function handleSendMessage() {
             // 完成回调
             console.log('深度思考完成');
             // 保存完整的AI回复（包括思考内容）
-            saveMessageToHistory('ai', aiContent, new Date().toLocaleTimeString(), thinkingContent);
+            saveMessageToHistory('ai', aiContent, new Date().toISOString(), thinkingContent);
           }
         );
       } else {
@@ -4843,13 +5075,14 @@ async function handleSendMessage() {
         let aiContent = '';
         response = await aliyunAPI.chatCompletionWithSearch(contactConfig, messages, (content) => {
           console.log('联网搜索流式更新:', content);
-          aiContent += content;
+          // content 已经是累积的完整内容，直接赋值即可
+          aiContent = content;
           updateMessageContent(aiMessageId, content);
         });
         
         // 流式传输完成后保存AI回复
         if (aiContent) {
-          saveMessageToHistory('ai', aiContent, new Date().toLocaleTimeString());
+          saveMessageToHistory('ai', aiContent, new Date().toISOString());
         }
       } else {
         // 非流式传输：等待响应后再创建消息
@@ -4872,13 +5105,14 @@ async function handleSendMessage() {
         let aiContent = '';
         response = await aliyunAPI.chatCompletion(contactConfig, messages, (content) => {
           // 流式传输时的实时更新
-          aiContent += content;
+          // content 已经是累积的完整内容，直接赋值即可
+          aiContent = content;
           updateMessageContent(aiMessageId, content);
         });
         
         // 流式传输完成后保存AI回复
         if (aiContent) {
-          saveMessageToHistory('ai', aiContent, new Date().toLocaleTimeString());
+          saveMessageToHistory('ai', aiContent, new Date().toISOString());
         }
       } else {
         // 非流式传输：等待响应后再创建消息
@@ -4912,13 +5146,42 @@ async function handleSendMessage() {
 }
 
 // 添加消息到聊天界面
+// 智能日期格式化函数
+function formatSmartDateTime(date) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const messageDate = new Date(date);
+  const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+  
+  const timeStr = messageDate.toLocaleTimeString('zh-CN', { hour12: false });
+  
+  if (messageDay.getTime() === today.getTime()) {
+    // 今天：只显示时间
+    return timeStr;
+  } else if (messageDay.getTime() === yesterday.getTime()) {
+    // 昨天：显示"昨天 时间"
+    return `昨天 ${timeStr}`;
+  } else {
+    // 前天及更早：显示完整日期时间
+    const dateStr = messageDate.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    return `${dateStr} ${timeStr}`;
+  }
+}
+
 async function addMessageToChat(role, content, isPlaceholder = false) {
   const chatMessages = document.getElementById('chat-messages');
   if (!chatMessages) return null;
   
   const messageId = 'msg-' + Date.now();
   const messageClass = role === 'user' ? 'user-message' : 'ai-message';
-  const currentTime = new Date().toLocaleTimeString();
+  const currentTime = formatSmartDateTime(new Date());
   
   // 获取头像URL
   let avatarSrc;
@@ -4930,6 +5193,9 @@ async function addMessageToChat(role, content, isPlaceholder = false) {
     // 对于AI消息，获取联系人头像
     avatarSrc = await getCurrentContactAvatar();
   }
+  
+  // 解析 Markdown（AI 消息使用 Markdown，用户消息保持原样）
+  const renderedContent = role === 'ai' ? renderMarkdown(content) : content.replace(/\n/g, '<br>');
   
   const messageHTML = `
     <div class="message ${messageClass}" id="${messageId}">
@@ -4953,7 +5219,7 @@ async function addMessageToChat(role, content, isPlaceholder = false) {
             <div class="thinking-text"></div>
           </div>
         ` : ''}
-        <div class="message-text">${content}</div>
+        <div class="message-text markdown-content">${renderedContent}</div>
         <div class="message-time">${currentTime}</div>
       </div>
     </div>
@@ -4964,7 +5230,7 @@ async function addMessageToChat(role, content, isPlaceholder = false) {
   
   // 保存消息到聊天记录（占位符消息不保存）
   if (!isPlaceholder) {
-    await saveMessageToHistory(role, content, currentTime);
+    await saveMessageToHistory(role, content, new Date().toISOString());
   }
   
   return messageId;
@@ -4988,7 +5254,8 @@ function updateMessageContent(messageId, content) {
   
   const messageText = messageElement.querySelector('.message-text');
   if (messageText) {
-    messageText.innerHTML = content.replace(/\n/g, '<br>');
+    // 使用 Markdown 解析 AI 消息内容
+    messageText.innerHTML = renderMarkdown(content);
   }
   
   // 滚动到底部

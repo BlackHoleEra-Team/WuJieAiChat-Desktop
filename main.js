@@ -2,6 +2,11 @@ const { app, BrowserWindow, ipcMain, Menu } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const os = require('os')
+const crypto = require('crypto')
+
+// 加密配置 - 使用固定密钥
+const ENCRYPTION_KEY = crypto.scryptSync('Bhe-wujie-desktop-1024BlackHole', 'wujie-salt', 32);
+const ENCRYPTION_IV = Buffer.alloc(16, 0);
 
 
 
@@ -151,13 +156,13 @@ ipcMain.handle('save-chat-history', async (event, contactId, messages) => {
     const fileName = `${contactId}.wjm`;
     const filePath = path.join(userDataDirs.msgPath, fileName);
     
-    // 简单加密：将消息转换为JSON字符串，然后进行字符变换
+    // 将消息转换为JSON字符串
     let jsonString = JSON.stringify(messages);
-    // 使用简单的字符偏移加密
-    let encrypted = '';
-    for (let i = 0; i < jsonString.length; i++) {
-      encrypted += String.fromCharCode(jsonString.charCodeAt(i) + 10);
-    }
+    
+    // 使用AES-256-CBC加密
+    const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, ENCRYPTION_IV);
+    let encrypted = cipher.update(jsonString, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
     
     await fs.promises.writeFile(filePath, encrypted, 'utf8');
     return { success: true, filePath };
@@ -178,13 +183,14 @@ ipcMain.handle('load-chat-history', async (event, contactId) => {
     
     let encrypted = await fs.promises.readFile(filePath, 'utf8');
     
-    // 解密：将字符偏移还原
-    let decrypted = '';
-    for (let i = 0; i < encrypted.length; i++) {
-      decrypted += String.fromCharCode(encrypted.charCodeAt(i) - 10);
-    }
+    // 使用AES-256-CBC解密
+    const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY, ENCRYPTION_IV);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
     
-    return JSON.parse(decrypted);
+    const messages = JSON.parse(decrypted);
+    
+    return messages;
   } catch (error) {
     console.error('加载聊天历史失败:', error);
     return [];
@@ -200,6 +206,66 @@ ipcMain.handle('save-contact-config', async (event, contactId, config) => {
     return { success: true, filePath };
   } catch (error) {
     console.error('保存联系人配置失败:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 删除联系人配置
+ipcMain.handle('delete-contact-config', async (event, contactId) => {
+  try {
+    const fileName = `${contactId}.json`;
+    const filePath = path.join(userDataDirs.contactConfigPath, fileName);
+    
+    if (fs.existsSync(filePath)) {
+      await fs.promises.unlink(filePath);
+      console.log(`删除联系人配置成功: ${contactId}`);
+    }
+    
+    // 同时删除该联系人的聊天记录
+    const msgFileName = `${contactId}.wjm`;
+    const msgFilePath = path.join(userDataDirs.msgPath, msgFileName);
+    
+    if (fs.existsSync(msgFilePath)) {
+      await fs.promises.unlink(msgFilePath);
+      console.log(`删除联系人聊天记录成功: ${contactId}`);
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('删除联系人配置失败:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 删除所有联系人配置
+ipcMain.handle('delete-all-contact-configs', async (event) => {
+  try {
+    const userDataDirs = createUserDataDir();
+    
+    // 删除所有联系人配置文件
+    if (fs.existsSync(userDataDirs.contactConfigPath)) {
+      const configFiles = await fs.promises.readdir(userDataDirs.contactConfigPath);
+      for (const file of configFiles) {
+        if (file.endsWith('.json')) {
+          await fs.promises.unlink(path.join(userDataDirs.contactConfigPath, file));
+        }
+      }
+    }
+    
+    // 删除所有聊天记录文件
+    if (fs.existsSync(userDataDirs.msgPath)) {
+      const msgFiles = await fs.promises.readdir(userDataDirs.msgPath);
+      for (const file of msgFiles) {
+        if (file.endsWith('.wjm')) {
+          await fs.promises.unlink(path.join(userDataDirs.msgPath, file));
+        }
+      }
+    }
+    
+    console.log('删除所有联系人数据和聊天记录成功');
+    return { success: true };
+  } catch (error) {
+    console.error('删除所有联系人配置失败:', error);
     return { success: false, error: error.message };
   }
 });

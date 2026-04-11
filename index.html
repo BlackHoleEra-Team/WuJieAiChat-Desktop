@@ -24,7 +24,7 @@
         <img src="images/WuJieAiChat.png" alt="无界" width="80" height="80">
       </div>
       <div class="splash-title">无界</div>
-      <div class="splash-subtitle">智能聊天助手</div>
+      <div class="splash-subtitle">边界之外，自有天地</div>
       <div class="splash-loader">
         <div class="loader-bar"></div>
       </div>
@@ -119,7 +119,26 @@
             <div class="chat-status">请先创建联系人</div>
           </div>
           <div class="chat-actions">
-            <!-- 暂时移除所有操作按钮 -->
+            <!-- 聊天菜单按钮 -->
+            <div class="chat-menu-container">
+              <button class="chat-menu-btn" id="chat-menu-btn" title="更多操作">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="5" r="1"/>
+                  <circle cx="12" cy="12" r="1"/>
+                  <circle cx="12" cy="19" r="1"/>
+                </svg>
+              </button>
+              <div class="chat-menu-dropdown" id="chat-menu-dropdown">
+                <div class="chat-menu-item" id="clear-chat-history-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18"/>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                  </svg>
+                  <span>清除聊天记录</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -430,6 +449,46 @@
                 
                 <div class="setting-actions">
                   <button class="btn btn-primary" id="save-chat-config" disabled>保存配置</button>
+                </div>
+              </div>
+              
+              <!-- AI聊天历史记忆设置 -->
+              <div class="section" style="margin-top: 24px;">
+                <div class="section-title">AI聊天历史记忆</div>
+                
+                <div class="chat-setting-item">
+                  <div class="setting-label">
+                    发送全部历史记录（不限制轮数）
+                    <div style="font-size: 12px; color: #e74c3c; margin-top: 4px; font-weight: 500;">
+                      ⚠️ 警告：开启后会带来极高的Token消耗，随着聊天记录增加可能会导致到达AI可用上下文上限而无法聊天！
+                    </div>
+                  </div>
+                  <div class="setting-control-group">
+                    <div class="toggle-switch" id="history-memory-toggle">
+                      <input type="checkbox" class="toggle-input" id="history-memory-checkbox">
+                      <div class="toggle-dot"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="chat-setting-item">
+                  <div class="setting-label">
+                    AI应记住几轮对话（一轮=用户+AI各一条）
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                      当上方开关关闭时生效，限制发送的历史记录轮数
+                    </div>
+                    <div style="font-size: 12px; color: #e74c3c; margin-top: 4px;">
+                      ⚠️ 轮数越多消耗的Token就越多
+                    </div>
+                  </div>
+                  <div class="setting-control-group">
+                    <input type="number" id="history-memory-rounds" value="10" min="1" max="100" class="setting-control" style="width: 80px;">
+                    <span style="margin-left: 10px;">轮</span>
+                  </div>
+                </div>
+                
+                <div class="setting-actions">
+                  <button class="btn btn-primary" id="save-history-memory-config">保存配置</button>
                 </div>
               </div>
             </div>
@@ -855,6 +914,8 @@
   <script src="./node_modules/jquery-cropper/dist/jquery-cropper.min.js"></script>
   <!-- 引入 crypto-js 用于加密 -->
   <script src="./node_modules/crypto-js/crypto-js.js"></script>
+  <!-- 引入 marked.js 用于 Markdown 解析 -->
+  <script src="./node_modules/marked/lib/marked.umd.js"></script>
   <script src="./js/aliyun-api.js"></script>
   <script src="./js/index.js"></script>
   <script>
