@@ -5,28 +5,34 @@
  * Unauthorized copying, distribution, or use of this software is strictly prohibited.
  */
 
-// 阿里云API调用模块
-class AliyunAPI {
+// Kimi API调用模块 - 与 OpenAI 兼容的 API 格式
+class KimiAPI {
   constructor(apiKey) {
     this.apiKey = apiKey
-    this.baseURL = 'https://dashscope.aliyuncs.com'
+    this.baseURL = 'https://api.moonshot.cn/v1'
   }
 
   // 普通聊天调用
   async chatCompletion(contactConfig, messages, onMessage = null) {
     const {
-      model = 'qwen-plus',
-      enableSearch = false,
-      enableThinking = false,
+      model = 'kimi-k2.5',
       systemPrompt = '',
-      isRolePlay = false
+      isRolePlay = false,
+      deepthink = false
     } = contactConfig
 
-    // 构建请求体 - 使用兼容模式格式
+    // 构建请求体
     const requestBody = {
       model: model,
       messages: [],
       stream: !isRolePlay // 角色扮演时禁用流式传输
+    }
+
+    // Kimi K2.5 支持通过 thinking 参数控制深度思考
+    if (model === 'kimi-k2.5') {
+      requestBody.thinking = {
+        type: deepthink ? 'enabled' : 'disabled'
+      }
     }
 
     // 添加系统提示
@@ -41,7 +47,7 @@ class AliyunAPI {
     requestBody.messages.push(...messages)
 
     try {
-      const response = await fetch(`${this.baseURL}/compatible-mode/v1/chat/completions`, {
+      const response = await fetch(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
@@ -51,7 +57,8 @@ class AliyunAPI {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`)
       }
 
       // 如果是流式传输，需要特殊处理SSE格式
@@ -62,7 +69,7 @@ class AliyunAPI {
       const data = await response.json()
       return data
     } catch (error) {
-      console.error('阿里云API调用失败:', error)
+      console.error('Kimi API调用失败:', error)
       throw error
     }
   }
@@ -126,10 +133,10 @@ class AliyunAPI {
     }
   }
 
-  // 深度思考调用（支持流式和非流式）
+  // 深度思考调用（kimi-k2-thinking 系列）
   async chatCompletionWithThinking(contactConfig, messages, onMessage, onThinking, onComplete) {
     const {
-      model = 'qwen-plus',
+      model = 'kimi-k2-thinking',
       systemPrompt = ''
     } = contactConfig
 
@@ -140,11 +147,7 @@ class AliyunAPI {
     const requestBody = {
       model: model,
       messages: [],
-      stream: isStreaming,
-      stream_options: isStreaming ? {
-        include_usage: true
-      } : undefined,
-      enable_thinking: true
+      stream: isStreaming
     }
 
     // 添加系统提示
@@ -159,7 +162,7 @@ class AliyunAPI {
     requestBody.messages.push(...messages)
 
     try {
-      const response = await fetch(`${this.baseURL}/compatible-mode/v1/chat/completions`, {
+      const response = await fetch(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
@@ -169,7 +172,8 @@ class AliyunAPI {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`)
       }
 
       if (isStreaming) {
@@ -204,7 +208,7 @@ class AliyunAPI {
                 if (data.choices && data.choices.length > 0) {
                   const choice = data.choices[0]
                   
-                  // 处理深度思考内容
+                  // Kimi thinking 模型的思考内容在 reasoning_content 字段
                   if (choice.delta && choice.delta.reasoning_content) {
                     console.log('收到深度思考内容:', choice.delta.reasoning_content)
                     if (onThinking) onThinking(choice.delta.reasoning_content)
@@ -240,27 +244,37 @@ class AliyunAPI {
         return result
       }
     } catch (error) {
-      console.error('阿里云深度思考API调用失败:', error)
+      console.error('Kimi 深度思考API调用失败:', error)
       throw error
     }
   }
 
-  // 联网搜索调用（支持流式传输）
-  async chatCompletionWithSearch(contactConfig, messages, onMessage = null) {
+  // 联网搜索调用 - 使用 builtin_function.$web_search
+  async chatCompletionWithSearch(contactConfig, messages, onMessage = null, onThinking = null, onComplete = null) {
     const {
-      model = 'qwen-plus',
-      systemPrompt = ''
+      model = 'kimi-k2.5',
+      systemPrompt = '',
+      deepthink = false
     } = contactConfig
 
-    // 判断是否使用流式传输
-    const isStreaming = !!onMessage
-
-    // 构建请求体
+    // 构建请求体（非流式，因为需要处理 tool_calls）
     const requestBody = {
       model: model,
       messages: [],
-      stream: isStreaming,
-      enable_search: true
+      stream: false,
+      tools: [
+        {
+          type: 'builtin_function',
+          function: {
+            name: '$web_search'
+          }
+        }
+      ]
+    }
+
+    // 使用联网搜索时必须禁用思考能力
+    if (model === 'kimi-k2.5') {
+      requestBody.thinking = { type: 'disabled' }
     }
 
     // 添加系统提示
@@ -275,154 +289,118 @@ class AliyunAPI {
     requestBody.messages.push(...messages)
 
     try {
-      const response = await fetch(`${this.baseURL}/compatible-mode/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      })
+      let fullContent = ''
+      let searchNotificationSent = false
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
+      // 循环处理，直到没有 tool_calls
+      while (true) {
+        const response = await fetch(`${this.baseURL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        })
 
-      if (isStreaming) {
-        // 流式传输处理
-        return await this._handleStreamResponse(response, onMessage)
-      } else {
-        // 非流式传输
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`)
+        }
+
         const data = await response.json()
-        return data
-      }
-    } catch (error) {
-      console.error('阿里云联网搜索API调用失败:', error)
-      throw error
-    }
-  }
+        const choice = data.choices[0]
 
-  // 深度思考 + 联网搜索调用（支持流式和非流式）
-  async chatCompletionWithThinkingAndSearch(contactConfig, messages, onMessage, onThinking, onComplete) {
-    const {
-      model = 'qwen-plus',
-      systemPrompt = ''
-    } = contactConfig
+        // 检查是否有 tool_calls
+        if (choice.finish_reason === 'tool_calls' && choice.message.tool_calls) {
+          const toolCalls = choice.message.tool_calls
 
-    // 判断是否使用流式传输
-    const isStreaming = !!(onMessage || onThinking || onComplete)
+          // 通知正在进行网络搜索（仅在流式模式下，且只通知一次）
+          if (onMessage && !searchNotificationSent) {
+            onMessage('正在进行网络搜索...')
+            searchNotificationSent = true
+          }
 
-    // 构建请求体
-    const requestBody = {
-      model: model,
-      messages: [],
-      stream: isStreaming,
-      stream_options: isStreaming ? {
-        include_usage: true
-      } : undefined,
-      enable_thinking: true,
-      enable_search: true
-    }
+          // 将 assistant 消息添加到上下文
+          requestBody.messages.push({
+            role: 'assistant',
+            content: choice.message.content || '',
+            tool_calls: choice.message.tool_calls
+          })
 
-    // 添加系统提示
-    if (systemPrompt) {
-      requestBody.messages.push({
-        role: 'system',
-        content: systemPrompt
-      })
-    }
+          // 处理每个 tool_call
+          for (const toolCall of toolCalls) {
+            if (toolCall.function.name === '$web_search') {
+              // 对于 $web_search，直接返回参数即可，由 Kimi 内部执行搜索
+              const toolResult = toolCall.function.arguments
 
-    // 添加用户消息
-    requestBody.messages.push(...messages)
+              // 将 tool 结果添加到上下文
+              requestBody.messages.push({
+                role: 'tool',
+                tool_call_id: toolCall.id,
+                name: toolCall.function.name,
+                content: toolResult
+              })
+            }
+          }
 
-    try {
-      const response = await fetch(`${this.baseURL}/compatible-mode/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      })
+          // 继续循环，让模型基于搜索结果生成回复
+          continue
+        }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      if (isStreaming) {
-        // 流式传输处理 - 同时处理深度思考和正常回复
-        const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let buffer = ''
-
-        while (true) {
-          const { done, value } = await reader.read()
-          
-          if (done) break
-          
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
-
-          for (const line of lines) {
-            if (line.trim() === '') continue
-            
-            if (line.startsWith('data: ')) {
-              const dataStr = line.slice(6)
-              
-              if (dataStr === '[DONE]') {
-                if (onComplete) onComplete()
-                return
-              }
-
-              try {
-                const data = JSON.parse(dataStr)
-                
-                if (data.choices && data.choices.length > 0) {
-                  const choice = data.choices[0]
-                  
-                  // 处理深度思考内容
-                  if (choice.delta && choice.delta.reasoning_content) {
-                    console.log('收到深度思考内容:', choice.delta.reasoning_content)
-                    if (onThinking) onThinking(choice.delta.reasoning_content)
-                  }
-                  
-                  // 处理正常回复内容
-                  if (choice.delta && choice.delta.content) {
-                    console.log('收到正常回复内容:', choice.delta.content)
-                    if (onMessage) onMessage(choice.delta.content)
-                  }
-                  
-                  // 处理完成状态
-                  if (choice.finish_reason) {
-                    if (onComplete) onComplete()
-                    return
-                  }
-                }
-              } catch (e) {
-                console.warn('解析SSE数据失败:', e, '原始数据:', dataStr)
-              }
+        // 正常回复
+        if (choice.message && choice.message.content) {
+          fullContent = choice.message.content
+          // 模拟流式输出，逐步调用回调
+          if (onMessage) {
+            // 按字符逐步输出，模拟打字效果
+            let currentContent = ''
+            const chars = fullContent.split('')
+            for (let i = 0; i < chars.length; i++) {
+              currentContent += chars[i]
+              onMessage(currentContent)
+              // 小延迟模拟打字效果
+              await new Promise(resolve => setTimeout(resolve, 5))
             }
           }
         }
-      } else {
-        // 非流式传输
-        const data = await response.json()
-        return data
+
+        break
+      }
+
+      // 完成回调（只在最后调用一次）
+      if (onComplete) {
+        onComplete()
+      }
+
+      return {
+        choices: [{
+          message: {
+            content: fullContent
+          }
+        }]
       }
     } catch (error) {
-      console.error('阿里云深度思考+联网搜索API调用失败:', error)
+      console.error('Kimi 联网搜索API调用失败:', error)
       throw error
     }
+  }
+
+  // 同时支持深度思考和联网搜索（Kimi 不支持同时开启，优先使用联网搜索）
+  async chatCompletionWithThinkingAndSearch(contactConfig, messages, onMessage, onThinking, onComplete) {
+    // Kimi 不支持同时开启深度思考和联网搜索
+    // 如果同时开启，优先使用联网搜索（因为联网搜索会禁用思考）
+    console.log('Kimi 不支持同时开启深度思考和联网搜索，优先使用联网搜索')
+    return await this.chatCompletionWithSearch(contactConfig, messages, onMessage, onThinking, onComplete)
   }
 }
 
 // 全局变量（用于浏览器环境）
 if (typeof window !== 'undefined') {
-  window.AliyunAPI = AliyunAPI
+  window.KimiAPI = KimiAPI
 }
 
 // 模块导出（用于Node.js环境）
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { AliyunAPI }
+  module.exports = { KimiAPI }
 }

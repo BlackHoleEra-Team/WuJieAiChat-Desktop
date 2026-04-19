@@ -1,3 +1,10 @@
+/**
+ * Copyright (C) 2026 BlackHoleEra-Team All Rights Reserved
+ * 
+ * This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use of this software is strictly prohibited.
+ */
+
 const { ipcRenderer } = require('electron')
 
 // 引入 jQuery、Cropper.js 和加密库
@@ -383,19 +390,19 @@ document.addEventListener('keydown', (e) => {
 })
 
 // 侧边栏标签切换功能
-function initSidebarTabs() {
+async function initSidebarTabs() {
   const sidebarTabs = document.querySelectorAll('.sidebar-tab')
   const contentAreas = document.querySelectorAll('.content-area')
   
   sidebarTabs.forEach(tab => {
-    tab.addEventListener('click', (e) => {
+    tab.addEventListener('click', async (e) => {
       const targetTab = tab.getAttribute('data-tab')
       // 每次点击时都读取最新的动画设置，确保切换后立即生效
       const animationType = localStorage.getItem('pageAnimationType') || 'slide'
       // 获取点击位置相对于视口的坐标
       const clickX = e.clientX
       const clickY = e.clientY
-      switchTab(targetTab, false, animationType, { x: clickX, y: clickY })
+      await switchTab(targetTab, false, animationType, { x: clickX, y: clickY })
     })
     
     // 添加标签页悬停音效（可选）
@@ -438,13 +445,13 @@ function initSidebarTabs() {
   // 存储当前正在执行的动画定时器，用于中断动画
   let currentAnimationTimer = null
   
-  function switchTab(targetTab, immediate = false, animationType = 'slide', clickPos = null) {
+  async function switchTab(targetTab, immediate = false, animationType = 'slide', clickPos = null) {
     // 首先清理所有动画状态，确保没有残留的动画效果
     if (currentAnimationTimer) {
       clearTimeout(currentAnimationTimer)
       currentAnimationTimer = null
     }
-    
+
     // 清理所有内容区域的动画状态
     document.querySelectorAll('.content-area').forEach(area => {
       area.classList.remove('page-fade-in', 'page-slide-right', 'page-slide-left', 'page-zoom-in', 'page-rotate-in', 'page-fly-in')
@@ -454,16 +461,16 @@ function initSidebarTabs() {
       area.style.opacity = ''
       area.style.visibility = ''
     })
-    
+
     // 获取当前激活的标签页
     const currentActiveTab = document.querySelector('.sidebar-tab.active')
     const currentActiveContent = document.querySelector('.content-area[style*="display: block"]')
-    
+
     // 检查是否已经在目标标签页，如果是则直接返回，不再执行动画
     if (currentActiveTab && currentActiveTab.getAttribute('data-tab') === targetTab) {
       return
     }
-    
+
     // 移除所有标签页的激活状态
     sidebarTabs.forEach(tab => {
       tab.classList.remove('active')
@@ -507,7 +514,7 @@ function initSidebarTabs() {
         if (contactId) {
           const contact = contacts.find(c => c.id === contactId);
           if (contact) {
-            updateChatHeader(contact);
+            await updateChatHeader(contact);
           }
         } else {
           // 如果没有选中的联系人，清理聊天内容
@@ -629,7 +636,7 @@ function initSidebarTabs() {
     targetContent.classList.add(animationClass)
     
     // 动画结束后移除动画类和重置样式
-  currentAnimationTimer = setTimeout(() => {
+  currentAnimationTimer = setTimeout(async () => {
     // 移除动画类
     targetContent.classList.remove(animationClass)
     // 重置所有动画相关样式
@@ -642,16 +649,16 @@ function initSidebarTabs() {
     targetContent.style.visibility = ''
     // 确保动画定时器被清除
     currentAnimationTimer = null
-    
+
     // 当切换到聊天标签页时，检查当前是否有选中的联系人，如果有，更新聊天标题
     if (targetTab === 'chat') {
       const chatHeader = document.querySelector('.chat-header');
       const contactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
-      
+
       if (contactId) {
         const contact = contacts.find(c => c.id === contactId);
         if (contact) {
-          updateChatHeader(contact);
+          await updateChatHeader(contact);
         } else {
           // 头部显示的联系人已被删除，清理聊天内容
           console.log('切换到聊天页面：头部联系人不存在，清理内容');
@@ -666,13 +673,21 @@ function initSidebarTabs() {
   }
   
   // 默认激活聊天标签页 - 使用立即模式避免动画延迟
-  switchTab('chat', true)
+  await switchTab('chat', true)
 }
 
 // 侧边栏聊天选项卡悬停弹窗功能
 document.addEventListener('DOMContentLoaded', function() {
   const chatTab = document.querySelector('.sidebar-tab[data-tab="chat"]');
+  if (!chatTab) {
+    console.warn('聊天选项卡未找到，跳过弹窗初始化');
+    return;
+  }
   const popup = chatTab.querySelector('.chat-tab-popup');
+  if (!popup) {
+    console.warn('聊天弹窗未找到，跳过弹窗初始化');
+    return;
+  }
   
   // 模拟联系人数据
   const contactsData = [
@@ -910,12 +925,12 @@ function loadChatHistory(contactName) {
   chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
 }
 
-function switchToChat(contact) {
+async function switchToChat(contact) {
   console.log(`切换到与 ${contact.name} 的聊天`);
-  
+
   // 更新主聊天区域的头部信息
-  updateChatHeader(contact);
-  
+  await updateChatHeader(contact);
+
   // 加载该联系人的聊天记录
   loadChatHistory(contact.name);
   
@@ -929,25 +944,25 @@ function switchToChat(contact) {
 }
 
 // 更新主聊天区域头部信息的函数
-function updateChatHeader(contact) {
+async function updateChatHeader(contact) {
   // 查找聊天头部元素
   const chatNameElement = document.querySelector('.chat-name');
   const chatHeader = document.querySelector('.chat-header');
   if (chatNameElement) {
     chatNameElement.textContent = contact.name || contact.nickname;
   }
-  
+
   // 更新头像
   const chatAvatarImg = document.querySelector('.chat-header .chat-avatar img');
   if (chatAvatarImg) {
-    chatAvatarImg.src = contact.avatar;
+    chatAvatarImg.src = await loadContactAvatar(contact.avatar);
   }
-  
+
   // 保存当前联系人ID到聊天头部
   if (chatHeader && contact.id) {
     chatHeader.setAttribute('data-contact-id', contact.id);
   }
-  
+
   console.log(`聊天头部已更新为: ${contact.name || contact.nickname}`);
 }
 
@@ -956,6 +971,11 @@ function initChatMenu() {
   const menuBtn = document.getElementById('chat-menu-btn');
   const menuDropdown = document.getElementById('chat-menu-dropdown');
   const clearHistoryBtn = document.getElementById('clear-chat-history-btn');
+  const manageChatHistoryBtn = document.getElementById('manage-chat-history-btn');
+  const pinContactBtn = document.getElementById('pin-contact-btn');
+  const muteContactBtn = document.getElementById('mute-contact-btn');
+  const pinToggle = document.getElementById('pin-toggle');
+  const muteToggle = document.getElementById('mute-toggle');
   
   if (!menuBtn || !menuDropdown) return;
   
@@ -963,6 +983,8 @@ function initChatMenu() {
   menuBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     menuDropdown.classList.toggle('show');
+    // 更新开关状态
+    updateToggleStates();
   });
   
   // 点击其他地方关闭下拉菜单
@@ -971,6 +993,97 @@ function initChatMenu() {
       menuDropdown.classList.remove('show');
     }
   });
+  
+  // 更新开关状态的函数
+  function updateToggleStates() {
+    const chatHeader = document.querySelector('.chat-header');
+    const contactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
+    if (!contactId) return;
+    
+    const contact = contacts.find(c => c.id === contactId);
+    if (!contact) return;
+    
+    // 更新置顶开关
+    if (pinToggle) {
+      pinToggle.classList.toggle('active', contact.isPinned || false);
+    }
+    // 更新免打扰开关
+    if (muteToggle) {
+      muteToggle.classList.toggle('active', contact.isMuted || false);
+    }
+  }
+  
+  // 置顶功能
+  if (pinContactBtn && pinToggle) {
+    pinContactBtn.addEventListener('click', async () => {
+      const chatHeader = document.querySelector('.chat-header');
+      const contactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
+      
+      if (!contactId) {
+        customModal.alert('请先选择一个联系人');
+        return;
+      }
+      
+      const contact = contacts.find(c => c.id === contactId);
+      if (!contact) return;
+      
+      // 切换置顶状态
+      contact.isPinned = !contact.isPinned;
+      pinToggle.classList.toggle('active', contact.isPinned);
+      
+      // 保存联系人
+      await saveContacts();
+      
+      // 重新渲染联系人列表
+      await renderContacts();
+      
+      console.log('联系人置顶状态:', contactId, contact.isPinned);
+    });
+  }
+  
+  // 免打扰功能
+  if (muteContactBtn && muteToggle) {
+    muteContactBtn.addEventListener('click', async () => {
+      const chatHeader = document.querySelector('.chat-header');
+      const contactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
+      
+      if (!contactId) {
+        customModal.alert('请先选择一个联系人');
+        return;
+      }
+      
+      const contact = contacts.find(c => c.id === contactId);
+      if (!contact) return;
+      
+      // 切换免打扰状态
+      contact.isMuted = !contact.isMuted;
+      muteToggle.classList.toggle('active', contact.isMuted);
+      
+      // 保存联系人
+      await saveContacts();
+      
+      console.log('联系人免打扰状态:', contactId, contact.isMuted);
+    });
+  }
+  
+  // 管理聊天记录功能
+  if (manageChatHistoryBtn) {
+    manageChatHistoryBtn.addEventListener('click', () => {
+      const chatHeader = document.querySelector('.chat-header');
+      const contactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
+      
+      if (!contactId) {
+        customModal.alert('请先选择一个联系人');
+        return;
+      }
+      
+      // 打开聊天记录管理窗口
+      ipcRenderer.send('open-chat-history-window', contactId);
+      
+      // 关闭下拉菜单
+      menuDropdown.classList.remove('show');
+    });
+  }
   
   // 清除聊天记录功能
   if (clearHistoryBtn) {
@@ -1041,13 +1154,13 @@ function initContactsPage() {
 }
 
 // 初始化侧边栏标签功能 - 修复数据加载顺序
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   console.log('DOM内容加载完成，开始初始化应用');
-  
+
   try {
     // 立即初始化所有功能，确保数据能正确加载
     console.log('开始初始化功能模块...');
-    initSidebarTabs()
+    await initSidebarTabs()
     initProfilePage()
     initContactsPage()
     initSettingsPage()
@@ -1055,9 +1168,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initBackgroundOpacity()
     initMessageInputKeyboard()
     initChatMenu()
-    
+
     console.log('所有功能模块初始化完成');
-    
+
     // 尝试加载用户数据，但不等待它完成
     loadUserData().then(() => {
       console.log('用户数据加载完成');
@@ -1070,7 +1183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         splashScreen.hide();
       }, 300);
     });
-    
+
   } catch (error) {
     console.error('应用初始化过程中出现错误:', error);
     // 即使出现错误也要强制隐藏启动动画
@@ -1153,6 +1266,9 @@ async function saveUserData(userData) {
     }
 
     localStorage.setItem('userData', JSON.stringify(userDataToSave))
+    
+    // 同时保存到文件系统，供其他窗口使用
+    await ipcRenderer.invoke('save-user-data', userDataToSave);
   } catch (error) {
     console.error('保存用户数据失败：', error)
   }
@@ -1398,6 +1514,9 @@ function initProfilePage() {
   // 加载用户数据 - 修复头像和用户名加载
 async function loadUserData() {
   const userData = await getUserData()
+  
+  // 同步用户数据到文件，供其他窗口使用
+  await ipcRenderer.invoke('save-user-data', userData);
   
   // 立即更新用户名显示，不延迟
   if (sidebarUsername) sidebarUsername.textContent = userData.username
@@ -1918,6 +2037,248 @@ function saveModalCroppedAvatar(canvas) {
   }
 }
 
+// 分段式回复功能
+const SegmentedReply = {
+  // 智能分割文本（支持中英文标点，保留代码块完整）
+  splitTextSmart(text) {
+    const segments = []
+    let currentSegment = ''
+    let inCodeBlock = false
+    let codeBlockMarker = ''
+    
+    // 按行分割处理
+    const lines = text.split('\n')
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      const trimmedLine = line.trim()
+      
+      // 检测代码块开始/结束
+      if (trimmedLine.startsWith('```')) {
+        // 如果在代码块外，开始代码块
+        if (!inCodeBlock) {
+          // 先保存当前累积的普通文本
+          if (currentSegment.trim()) {
+            const subSegments = this.splitByPunctuation(currentSegment.trim())
+            segments.push(...subSegments)
+            currentSegment = ''
+          }
+          inCodeBlock = true
+          codeBlockMarker = trimmedLine
+          currentSegment = line + '\n'
+        } else {
+          // 结束代码块
+          currentSegment += line
+          segments.push(currentSegment.trim())
+          currentSegment = ''
+          inCodeBlock = false
+          codeBlockMarker = ''
+        }
+        continue
+      }
+      
+      // 如果在代码块内，累积所有内容
+      if (inCodeBlock) {
+        currentSegment += line + '\n'
+        continue
+      }
+      
+      // 普通文本处理
+      currentSegment += line + '\n'
+      
+      // 检查是否以标点结尾，如果是则分割
+      const trimmed = currentSegment.trim()
+      if (trimmed && /[。！？；.!?;]$/.test(trimmed)) {
+        segments.push(trimmed)
+        currentSegment = ''
+      }
+    }
+    
+    // 处理最后剩余的内容
+    if (currentSegment.trim()) {
+      if (inCodeBlock) {
+        // 未闭合的代码块，作为普通文本处理
+        const subSegments = this.splitByPunctuation(currentSegment.trim())
+        segments.push(...subSegments)
+      } else {
+        const trimmed = currentSegment.trim()
+        // 检查是否包含多个句子
+        const subSegments = this.splitByPunctuation(trimmed)
+        segments.push(...subSegments)
+      }
+    }
+    
+    // 如果没有分割成功，返回原文
+    if (segments.length === 0 && text.trim()) {
+      return [text.trim()]
+    }
+    
+    return segments
+  },
+  
+  // 辅助函数：按标点分割普通文本
+  splitByPunctuation(text) {
+    const segments = []
+    // 匹配句子：内容 + 标点
+    const regex = /[^。！？；.!?;]+[。！？；.!?;]/g
+    const matches = text.match(regex)
+    
+    if (matches) {
+      let lastIndex = 0
+      for (const match of matches) {
+        segments.push(match.trim())
+        lastIndex += match.length
+      }
+      // 处理剩余部分（没有标点的结尾）
+      const remaining = text.substring(lastIndex).trim()
+      if (remaining) {
+        segments.push(remaining)
+      }
+    } else {
+      // 没有标点，整体返回
+      segments.push(text)
+    }
+    
+    return segments
+  },
+
+  // 根据文本长度计算延迟（更自然的算法）
+  calculateDelay(text) {
+    const length = text.length
+    // 使用平方根增长，短句快、长句慢但增长平缓
+    // 增加系数让延迟更长（从0.3增加到0.6）
+    const baseDelay = Math.sqrt(length) * 0.6
+    // 添加 ±30% 的随机波动，模拟真人打字
+    const randomFactor = 0.7 + Math.random() * 0.6
+    // 限制在 0.8秒 到 6秒 之间（增加最小和最大延迟）
+    return Math.min(Math.max(baseDelay * randomFactor, 0.8), 6)
+  },
+
+  // 显示分段回复
+  async showSegments(segments, onSegment, onComplete, abortSignal) {
+    let displayedText = ''
+    
+    for (let i = 0; i < segments.length; i++) {
+      // 检查是否被中断
+      if (abortSignal && abortSignal.aborted) {
+        // 显示剩余全部内容
+        const remainingText = segments.slice(i).join('')
+        if (remainingText) {
+          onSegment(remainingText, true)
+        }
+        break
+      }
+
+      const segment = segments[i]
+      displayedText += segment
+      
+      // 回调显示当前段
+      onSegment(segment, i === segments.length - 1)
+      
+      // 如果不是最后一段，等待
+      if (i < segments.length - 1) {
+        const delay = this.calculateDelay(segment)
+        await this.sleep(delay * 1000)
+      }
+    }
+    
+    if (onComplete) {
+      onComplete()
+    }
+  },
+
+  // 执行分段回复
+  async execute(text, onSegment, onComplete, abortSignal) {
+    const segments = this.splitTextSmart(text)
+    await this.showSegments(segments, onSegment, onComplete, abortSignal)
+  },
+
+  // 辅助函数：延迟
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+}
+
+// 处理AI回复显示（支持分段式回复）
+async function handleAIResponseDisplay(aiContent, contact, isThinking = false, thinkingContent = null) {
+  // 检查是否应该使用分段式回复
+  // 仅在角色扮演模式下启用（角色扮演即非流式，且深度思考关闭时）
+  const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+  const enableSegmentedReply = chatSettings.enableSegmentedReply || false
+  const shouldUseSegmentedReply = enableSegmentedReply && contact.roleplay && !contact.deepthink
+
+  let lastMessageId
+
+  if (shouldUseSegmentedReply) {
+    // 使用分段式回复 - 每条分段作为独立消息保存
+    const chatStatus = document.querySelector('.chat-status')
+    const originalStatus = chatStatus ? chatStatus.textContent : ''
+    if (chatStatus) chatStatus.textContent = '正在输入...'
+
+    // 分割文本
+    const segments = SegmentedReply.splitTextSmart(aiContent)
+
+    // 创建中断控制器
+    const abortController = { aborted: false }
+
+    // 逐段显示并保存
+    for (let i = 0; i < segments.length; i++) {
+      if (abortController.aborted) {
+        // 如果中断，剩余内容作为一条消息显示
+        const remainingText = segments.slice(i).join('')
+        if (remainingText.trim()) {
+          // addMessageToChat 内部会保存到历史记录
+          lastMessageId = await addMessageToChat('ai', remainingText, false)
+        }
+        break
+      }
+
+      const segment = segments[i]
+
+      // 显示当前段（addMessageToChat 内部会保存到历史记录）
+      lastMessageId = await addMessageToChat('ai', segment, false)
+
+      // 如果不是最后一段，等待
+      if (i < segments.length - 1) {
+        const delay = SegmentedReply.calculateDelay(segment)
+        await SegmentedReply.sleep(delay * 1000)
+      }
+    }
+
+    // 恢复状态
+    if (chatStatus) chatStatus.textContent = originalStatus
+  } else {
+    // 原有逻辑：延迟发送或立即显示
+    const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+    const enableDelay = chatSettings.enableDelay || false
+    const delayTime = chatSettings.delayTime || 3
+
+    if (enableDelay) {
+      // 延迟显示
+      const chatStatus = document.querySelector('.chat-status')
+      const originalStatus = chatStatus ? chatStatus.textContent : ''
+      if (chatStatus) chatStatus.textContent = '正在输入...'
+
+      await new Promise(resolve => setTimeout(resolve, delayTime * 1000))
+
+      if (chatStatus) chatStatus.textContent = originalStatus
+      lastMessageId = await addMessageToChat('ai', aiContent, false)
+    } else {
+      // 立即显示
+      lastMessageId = await addMessageToChat('ai', aiContent, false)
+    }
+  }
+
+  // 如果有思考内容，添加到第一条消息
+  if (thinkingContent && lastMessageId) {
+    console.log('非流式模式：准备添加思考内容', lastMessageId, thinkingContent)
+    updateThinkingContent(lastMessageId, thinkingContent)
+    console.log('非流式模式：思考内容添加完成')
+  }
+
+  return lastMessageId
+}
+
 // 聊天设置功能
 function initChatSettings() {
   // 获取DOM元素 - 延迟发送设置
@@ -1931,52 +2292,60 @@ function initChatSettings() {
   const historyMemoryCheckbox = document.getElementById('history-memory-checkbox')
   const historyMemoryRounds = document.getElementById('history-memory-rounds')
   const saveHistoryMemoryBtn = document.getElementById('save-history-memory-config')
+
+  // 获取DOM元素 - AI用户姓名设置
+  const enableAiUserNameSwitch = document.getElementById('enable-ai-user-name-switch')
+  const enableAiUserNameCheckbox = document.getElementById('enable-ai-user-name-checkbox')
+  const aiUserNameInput = document.getElementById('ai-user-name-input')
+  const saveAiUserNameBtn = document.getElementById('save-ai-user-name-config')
+  
+  // 获取DOM元素 - 分段式回复设置
+  const enableSegmentedReplySwitch = document.getElementById('enable-segmented-reply-switch')
+  const enableSegmentedReplyCheckbox = document.getElementById('enable-segmented-reply-checkbox')
+  const saveSegmentedReplyBtn = document.getElementById('save-segmented-reply-config')
   
   // 初始化延迟发送设置
   if (enableDelaySwitch && enableDelayCheckbox && delayTimeInput && saveChatConfigBtn) {
+    // 从本地存储加载延迟发送设置
+    function loadDelaySettings() {
+      const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+      const isEnabled = chatSettings.enableDelay || false
+      const delayTime = chatSettings.delayTime || 3
+      
+      // 更新UI
+      enableDelayCheckbox.checked = isEnabled
+      if (isEnabled) {
+        enableDelaySwitch.classList.add('active')
+      } else {
+        enableDelaySwitch.classList.remove('active')
+      }
+      
+      delayTimeInput.value = delayTime
+      
+      // 根据开关状态更新输入框和保存按钮的禁用状态
+      updateDelaySettingControls(isEnabled)
+    }
+    
+    // 更新控制元素的禁用状态
+    function updateDelaySettingControls(isEnabled) {
+      delayTimeInput.disabled = !isEnabled
+      saveChatConfigBtn.disabled = !isEnabled
+    }
+    
+    // 保存延迟发送设置到本地存储
+    function saveDelaySettings() {
+      const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+      chatSettings.enableDelay = enableDelayCheckbox.checked
+      chatSettings.delayTime = parseInt(delayTimeInput.value) || 3
+      
+      localStorage.setItem('chatSettings', JSON.stringify(chatSettings))
+      customModal.alert('聊天配置已保存！')
+    }
+    
     // 检查是否已经初始化过，避免重复绑定事件
-    if (enableDelaySwitch.dataset.initialized === 'true') {
-      // 只更新UI，不重新绑定事件
-      loadDelaySettings()
-    } else {
+    if (enableDelaySwitch.dataset.initialized !== 'true') {
       // 标记为已初始化
       enableDelaySwitch.dataset.initialized = 'true'
-      
-      // 从本地存储加载延迟发送设置
-      function loadDelaySettings() {
-        const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
-        const isEnabled = chatSettings.enableDelay || false
-        const delayTime = chatSettings.delayTime || 3
-        
-        // 更新UI
-        enableDelayCheckbox.checked = isEnabled
-        if (isEnabled) {
-          enableDelaySwitch.classList.add('active')
-        } else {
-          enableDelaySwitch.classList.remove('active')
-        }
-        
-        delayTimeInput.value = delayTime
-        
-        // 根据开关状态更新输入框和保存按钮的禁用状态
-        updateDelaySettingControls(isEnabled)
-      }
-      
-      // 更新控制元素的禁用状态
-      function updateDelaySettingControls(isEnabled) {
-        delayTimeInput.disabled = !isEnabled
-        saveChatConfigBtn.disabled = !isEnabled
-      }
-      
-      // 保存延迟发送设置到本地存储
-      function saveDelaySettings() {
-        const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
-        chatSettings.enableDelay = enableDelayCheckbox.checked
-        chatSettings.delayTime = parseInt(delayTimeInput.value) || 3
-        
-        localStorage.setItem('chatSettings', JSON.stringify(chatSettings))
-        customModal.alert('聊天配置已保存！')
-      }
       
       // 处理开关点击事件
       enableDelaySwitch.addEventListener('click', () => {
@@ -1996,49 +2365,47 @@ function initChatSettings() {
       saveChatConfigBtn.addEventListener('click', () => {
         saveDelaySettings()
       })
-      
-      // 初始化加载设置
-      loadDelaySettings()
     }
+    
+    // 初始化加载设置
+    loadDelaySettings()
   }
   
   // 初始化历史记录记忆设置
   if (historyMemoryToggle && historyMemoryCheckbox && historyMemoryRounds && saveHistoryMemoryBtn) {
+    // 从本地存储加载历史记录记忆设置
+    function loadHistoryMemorySettings() {
+      const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+      const isEnabled = chatSettings.enableHistoryMemory || false
+      const rounds = chatSettings.historyMemoryRounds || 10
+      
+      // 更新UI
+      historyMemoryCheckbox.checked = isEnabled
+      if (isEnabled) {
+        historyMemoryToggle.classList.add('active')
+        historyMemoryRounds.disabled = true
+      } else {
+        historyMemoryToggle.classList.remove('active')
+        historyMemoryRounds.disabled = false
+      }
+      
+      historyMemoryRounds.value = rounds
+    }
+    
+    // 保存历史记录记忆设置到本地存储
+    function saveHistoryMemorySettings() {
+      const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+      chatSettings.enableHistoryMemory = historyMemoryCheckbox.checked
+      chatSettings.historyMemoryRounds = parseInt(historyMemoryRounds.value) || 10
+      
+      localStorage.setItem('chatSettings', JSON.stringify(chatSettings))
+      customModal.alert('AI聊天历史记忆配置已保存！')
+    }
+    
     // 检查是否已经初始化过
-    if (historyMemoryToggle.dataset.initialized === 'true') {
-      loadHistoryMemorySettings()
-    } else {
+    if (historyMemoryToggle.dataset.initialized !== 'true') {
       // 标记为已初始化
       historyMemoryToggle.dataset.initialized = 'true'
-      
-      // 从本地存储加载历史记录记忆设置
-      function loadHistoryMemorySettings() {
-        const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
-        const isEnabled = chatSettings.enableHistoryMemory || false
-        const rounds = chatSettings.historyMemoryRounds || 10
-        
-        // 更新UI
-        historyMemoryCheckbox.checked = isEnabled
-        if (isEnabled) {
-          historyMemoryToggle.classList.add('active')
-          historyMemoryRounds.disabled = true
-        } else {
-          historyMemoryToggle.classList.remove('active')
-          historyMemoryRounds.disabled = false
-        }
-        
-        historyMemoryRounds.value = rounds
-      }
-      
-      // 保存历史记录记忆设置到本地存储
-      function saveHistoryMemorySettings() {
-        const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
-        chatSettings.enableHistoryMemory = historyMemoryCheckbox.checked
-        chatSettings.historyMemoryRounds = parseInt(historyMemoryRounds.value) || 10
-        
-        localStorage.setItem('chatSettings', JSON.stringify(chatSettings))
-        customModal.alert('AI聊天历史记忆配置已保存！')
-      }
       
       // 处理开关点击事件
       historyMemoryToggle.addEventListener('click', () => {
@@ -2058,10 +2425,147 @@ function initChatSettings() {
       saveHistoryMemoryBtn.addEventListener('click', () => {
         saveHistoryMemorySettings()
       })
-      
-      // 初始化加载设置
-      loadHistoryMemorySettings()
     }
+    
+    // 初始化加载设置
+    loadHistoryMemorySettings()
+  }
+
+  // 初始化AI用户姓名设置
+  if (enableAiUserNameSwitch && enableAiUserNameCheckbox && aiUserNameInput && saveAiUserNameBtn) {
+    // 从本地存储加载AI用户姓名设置
+    function loadAiUserNameSettings() {
+      const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+      const isEnabled = chatSettings.enableAiUserName || false
+      const userName = chatSettings.aiUserName || ''
+
+      // 更新UI
+      enableAiUserNameCheckbox.checked = isEnabled
+      if (isEnabled) {
+        enableAiUserNameSwitch.classList.add('active')
+      } else {
+        enableAiUserNameSwitch.classList.remove('active')
+      }
+
+      aiUserNameInput.value = userName
+
+      // 根据开关状态更新输入框和保存按钮的禁用状态
+      updateAiUserNameControls(isEnabled)
+    }
+
+    // 更新控制元素的禁用状态
+    function updateAiUserNameControls(isEnabled) {
+      aiUserNameInput.disabled = !isEnabled
+      saveAiUserNameBtn.disabled = !isEnabled
+    }
+
+    // 保存AI用户姓名设置到本地存储
+    function saveAiUserNameSettings() {
+      const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+      chatSettings.enableAiUserName = enableAiUserNameCheckbox.checked
+      chatSettings.aiUserName = aiUserNameInput.value.trim()
+
+      localStorage.setItem('chatSettings', JSON.stringify(chatSettings))
+      customModal.alert('AI用户姓名设置已保存！')
+    }
+
+    // 检查是否已经初始化过
+    if (enableAiUserNameSwitch.dataset.initialized !== 'true') {
+      // 标记为已初始化
+      enableAiUserNameSwitch.dataset.initialized = 'true'
+
+      // 处理开关点击事件
+      enableAiUserNameSwitch.addEventListener('click', () => {
+        const isEnabled = !enableAiUserNameCheckbox.checked
+        enableAiUserNameCheckbox.checked = isEnabled
+
+        if (isEnabled) {
+          enableAiUserNameSwitch.classList.add('active')
+        } else {
+          enableAiUserNameSwitch.classList.remove('active')
+        }
+
+        updateAiUserNameControls(isEnabled)
+      })
+
+      // 处理保存按钮点击事件
+      saveAiUserNameBtn.addEventListener('click', () => {
+        saveAiUserNameSettings()
+      })
+    }
+
+    // 初始化加载设置
+    loadAiUserNameSettings()
+  }
+
+  // 初始化分段式回复设置
+  if (enableSegmentedReplySwitch && enableSegmentedReplyCheckbox && saveSegmentedReplyBtn) {
+    // 从本地存储加载分段式回复设置
+    function loadSegmentedReplySettings() {
+      const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+      const isEnabled = chatSettings.enableSegmentedReply || false
+      
+      // 更新UI - 包括checkbox和switch的active类
+      enableSegmentedReplyCheckbox.checked = isEnabled
+      if (isEnabled) {
+        enableSegmentedReplySwitch.classList.add('active')
+      } else {
+        enableSegmentedReplySwitch.classList.remove('active')
+      }
+      
+      updateSegmentedReplySaveButton()
+    }
+
+    // 更新保存按钮状态
+    function updateSegmentedReplySaveButton() {
+      const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+      const originalEnabled = chatSettings.enableSegmentedReply || false
+      const hasChanges = enableSegmentedReplyCheckbox.checked !== originalEnabled
+      saveSegmentedReplyBtn.disabled = !hasChanges
+    }
+
+    // 保存分段式回复设置到本地存储
+    function saveSegmentedReplySettings() {
+      const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}')
+      chatSettings.enableSegmentedReply = enableSegmentedReplyCheckbox.checked
+      localStorage.setItem('chatSettings', JSON.stringify(chatSettings))
+      saveSegmentedReplyBtn.disabled = true
+
+      // 显示保存成功提示
+      if (typeof customModal !== 'undefined') {
+        customModal.alert('分段式回复设置已保存！')
+      }
+    }
+
+    // 检查是否已经初始化过
+    if (enableSegmentedReplySwitch.dataset.initialized !== 'true') {
+      // 标记为已初始化
+      enableSegmentedReplySwitch.dataset.initialized = 'true'
+
+      // 监听开关变化
+      enableSegmentedReplySwitch.addEventListener('click', (e) => {
+        if (e.target !== enableSegmentedReplyCheckbox) {
+          enableSegmentedReplyCheckbox.checked = !enableSegmentedReplyCheckbox.checked
+        }
+        
+        // 更新switch的active类
+        if (enableSegmentedReplyCheckbox.checked) {
+          enableSegmentedReplySwitch.classList.add('active')
+        } else {
+          enableSegmentedReplySwitch.classList.remove('active')
+        }
+        
+        updateSegmentedReplySaveButton()
+      })
+
+      // 处理保存按钮点击事件
+      saveSegmentedReplyBtn.addEventListener('click', () => {
+        saveSegmentedReplySettings()
+      })
+    }
+
+    // 初始化加载设置（每次打开设置页面都加载）
+    loadSegmentedReplySettings()
   }
 }
 
@@ -2268,9 +2772,84 @@ function initSettingsPage() {
   setTimeout(() => {
     initCustomDropdowns()
   }, 100)
-  
+
   // 初始化API密钥数据管理
   initApiKeysData()
+
+  // 初始化更新源设置
+  initUpdateSourceSettings()
+}
+
+// 更新源名称映射
+const UPDATE_SOURCE_NAMES = {
+  'github': 'GitHub 官方',
+  'ghproxy': 'GH-Proxy 主站 (Cloudflare)',
+  'ghproxy_v6': 'GH-Proxy V6 (国内优选)',
+  'ghproxy_hk': 'GH-Proxy 香港 (国内优化)',
+  'ghproxy_cdn': 'GH-Proxy Fastly CDN',
+  'ghproxy_edge': 'GH-Proxy EdgeOne'
+}
+
+// 初始化更新源设置
+function initUpdateSourceSettings() {
+  // 获取当前保存的更新源
+  const savedSource = localStorage.getItem('updateSource') || 'github'
+
+  // 更新下拉菜单显示
+  const updateSourceSelected = document.getElementById('update-source-selected')
+  if (updateSourceSelected) {
+    updateSourceSelected.textContent = UPDATE_SOURCE_NAMES[savedSource] || 'GitHub 官方'
+  }
+
+  // 监听下拉菜单选择
+  const updateSourceDropdown = document.getElementById('update-source-dropdown')
+  if (updateSourceDropdown) {
+    const options = updateSourceDropdown.querySelectorAll('.custom-dropdown-option')
+    options.forEach(option => {
+      option.addEventListener('click', () => {
+        const value = option.getAttribute('data-value')
+        const name = option.textContent
+
+        // 保存到 localStorage
+        localStorage.setItem('updateSource', value)
+
+        // 更新显示
+        if (updateSourceSelected) {
+          updateSourceSelected.textContent = name
+        }
+
+        // 调用 auto-updater 的切换函数
+        try {
+          if (typeof window.setUpdateSource === 'function') {
+            window.setUpdateSource(value)
+          }
+        } catch (error) {
+          console.error('切换更新源失败:', error)
+        }
+
+        console.log('更新源已切换为:', name)
+      })
+    })
+  }
+
+  // 检查更新按钮
+  const checkUpdateBtn = document.getElementById('check-update-btn')
+  if (checkUpdateBtn) {
+    checkUpdateBtn.addEventListener('click', async () => {
+      try {
+        // 使用全局的 checkForUpdates 函数（auto-updater.js 已加载）
+        if (typeof window.checkForUpdates === 'function') {
+          await window.checkForUpdates(true)
+        } else {
+          console.error('checkForUpdates 函数未找到')
+          customModal.alert('检查更新功能初始化失败，请重启应用')
+        }
+      } catch (error) {
+        console.error('检查更新失败:', error)
+        customModal.alert('检查更新失败: ' + error.message)
+      }
+    })
+  }
 }
 
 // API 密钥数据管理
@@ -3018,6 +3597,13 @@ function initTheme() {
   
   // 初始化系统主题开关事件
   initSystemThemeSwitch()
+  
+  // 监听托盘窗口的主题切换
+  ipcRenderer.on('theme-changed', (event, theme) => {
+    localStorage.setItem('appTheme', theme)
+    const isSystemEnabled = localStorage.getItem('isSystemThemeEnabled') === 'true'
+    toggleTheme(theme, isSystemEnabled)
+  })
 }
 
 // 初始化系统主题开关
@@ -3369,6 +3955,9 @@ function toggleTheme(mode, isSystemThemeEnabled = false) {
   // 重新应用背景遮罩透明度，解决主题切换时的残留问题
   const savedOpacity = parseFloat(localStorage.getItem('backgroundOpacity') || '0.8')
   updateBackgroundOpacity(savedOpacity)
+
+  // 通知其他窗口主题已更改
+  ipcRenderer.send('theme-changed', actualMode)
 }
 
 // 防止鼠标滚轮缩放
@@ -3477,7 +4066,8 @@ const MODEL_CONFIGS = {
       { id: 'deepseek-chat', name: 'deepseek-chat', supportsWebSearch: false, supportsDeepThink: false },
       { id: 'deepseek-reasoner', name: 'deepseek-reasoner', supportsWebSearch: false, supportsDeepThink: true }
     ],
-    hint: 'deepseek-reasoner模型强制打开深度思考功能'
+    hint: 'deepseek-reasoner模型强制打开深度思考功能',
+    defaultSystemPrompt: '你是 DeepSeek，一个由深度求索公司开发的 AI 助手。你擅长中文和英文对话，能够为用户提供有用、准确且安全的回答。'
   },
   '阿里云百炼': {
     models: [
@@ -3522,13 +4112,15 @@ const MODEL_CONFIGS = {
       { id: 'qwen3-4b', name: 'qwen3-4b', supportsWebSearch: false, supportsDeepThink: false },
       { id: 'qwen3-1.7b', name: 'qwen3-1.7b', supportsWebSearch: false, supportsDeepThink: false },
       { id: 'qwen3-0.6b', name: 'qwen3-0.6b', supportsWebSearch: false, supportsDeepThink: false }
-    ]
+    ],
+    defaultSystemPrompt: '你是通义千问，由阿里云开发的大型语言模型。你擅长中文和英文对话，能够为用户提供有用、准确且安全的回答。'
   },
   Kimi: {
     models: [
-      { id: 'kimi-k2-0905-preview', name: 'kimi-k2-0905-preview', supportsWebSearch: true, supportsDeepThink: false },
-      { id: 'kimi-k2-0711-preview', name: 'kimi-k2-0711-preview', supportsWebSearch: true, supportsDeepThink: false },
-      { id: 'kimi-k2-turbo-preview', name: 'kimi-k2-turbo-preview', supportsWebSearch: true, supportsDeepThink: false },
+      { id: 'kimi-k2.5', name: 'kimi-k2.5', supportsWebSearch: true, supportsDeepThink: true },
+      { id: 'kimi-k2-0905-preview', name: 'kimi-k2-0905-preview', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'kimi-k2-0711-preview', name: 'kimi-k2-0711-preview', supportsWebSearch: false, supportsDeepThink: false },
+      { id: 'kimi-k2-turbo-preview', name: 'kimi-k2-turbo-preview', supportsWebSearch: false, supportsDeepThink: false },
       { id: 'kimi-k2-thinking', name: 'kimi-k2-thinking', supportsWebSearch: false, supportsDeepThink: true },
       { id: 'kimi-k2-thinking-turbo', name: 'kimi-k2-thinking-turbo', supportsWebSearch: false, supportsDeepThink: true },
       { id: 'moonshot-v1-8k', name: 'moonshot-v1-8k', supportsWebSearch: false, supportsDeepThink: false },
@@ -3537,7 +4129,8 @@ const MODEL_CONFIGS = {
       { id: 'moonshot-v1-8k-vision-preview', name: 'moonshot-v1-8k-vision-preview', supportsWebSearch: false, supportsDeepThink: false },
       { id: 'moonshot-v1-32k-vision-preview', name: 'moonshot-v1-32k-vision-preview', supportsWebSearch: false, supportsDeepThink: false },
       { id: 'moonshot-v1-128k-vision-preview', name: 'moonshot-v1-128k-vision-preview', supportsWebSearch: false, supportsDeepThink: false }
-    ]
+    ],
+    defaultSystemPrompt: '你是 Kimi，由 Moonshot AI 提供的人工智能助手，你更擅长中文和英文的对话。你会为用户提供安全，有帮助，准确的回答。同时，你会拒绝一切涉及恐怖主义，种族歧视，黄色暴力等问题的回答。Moonshot AI 为专有名词，不可翻译成其他语言。'
   }
 };
 
@@ -3546,11 +4139,18 @@ let contacts = [];
 let currentContactId = null;
 
 // 更新悬浮弹窗联系人列表
-function updatePopupContacts() {
+async function updatePopupContacts() {
   const popupContent = document.querySelector('.chat-contacts-popup .popup-content');
   if (!popupContent) return;
   
-  if (contacts.length === 0) {
+  // 对联系人排序：置顶的排在前面
+  const sortedContacts = [...contacts].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return 0;
+  });
+  
+  if (sortedContacts.length === 0) {
     popupContent.innerHTML = `
       <div class="popup-empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -3572,13 +4172,13 @@ function updatePopupContacts() {
       });
     }
   } else {
-    // 渲染联系人列表
-    let contactsHTML = '';
-    contacts.forEach(contact => {
-      contactsHTML += `
+    // 渲染联系人列表 - 异步加载头像
+    const contactsHTMLPromises = sortedContacts.map(async (contact) => {
+      const avatarSrc = await loadContactAvatar(contact.avatar);
+      return `
         <div class="contact-item" data-id="${contact.id}">
           <div class="contact-avatar">
-            <img src="${contact.avatar}" alt="${contact.nickname}" width="40" height="40">
+            <img src="${avatarSrc}" alt="${contact.nickname}" width="40" height="40">
           </div>
           <div class="contact-details">
             <div class="contact-name">${contact.nickname}</div>
@@ -3590,6 +4190,7 @@ function updatePopupContacts() {
       `;
     });
     
+    const contactsHTML = (await Promise.all(contactsHTMLPromises)).join('');
     popupContent.innerHTML = contactsHTML;
     
     // 绑定点击事件
@@ -3742,6 +4343,19 @@ function initCreateContactModal() {
         const advancedOptions = document.getElementById('advanced-options');
         advancedOptions.style.display = this.classList.contains('active') ? 'block' : 'none';
       }
+      
+      // kimi-k2.5 模型下，深度思考和联网搜索互斥
+      const modelSelect = document.getElementById('contact-model');
+      const selectedModel = modelSelect.value;
+      if (selectedModel === 'kimi-k2.5') {
+        if (this === websearchToggle && this.classList.contains('active')) {
+          // 开启联网搜索时，关闭深度思考
+          deepthinkToggle.classList.remove('active');
+        } else if (this === deepthinkToggle && this.classList.contains('active')) {
+          // 开启深度思考时，关闭联网搜索
+          websearchToggle.classList.remove('active');
+        }
+      }
     });
   });
   
@@ -3760,10 +4374,19 @@ function initCreateContactModal() {
   
   // 服务商选择变化
   contactProviderSelect.addEventListener('change', function() {
-    updateApikeyOptions(this.value);
-    contactApikeySelect.disabled = !this.value;
+    const provider = this.value;
+    updateApikeyOptions(provider);
+    contactApikeySelect.disabled = !provider;
     contactModelSelect.disabled = true;
     contactModelSelect.innerHTML = '<option value="">请先选择API-Key</option>';
+    
+    // 自动填入默认系统提示词
+    const systemPromptTextarea = document.getElementById('contact-system-prompt');
+    if (provider && MODEL_CONFIGS[provider] && MODEL_CONFIGS[provider].defaultSystemPrompt) {
+      systemPromptTextarea.value = MODEL_CONFIGS[provider].defaultSystemPrompt;
+    } else {
+      systemPromptTextarea.value = '';
+    }
   });
   
   // API-Key 选择变化
@@ -3771,6 +4394,170 @@ function initCreateContactModal() {
     const provider = contactProviderSelect.value;
     updateModelOptions(provider, this.value);
     contactModelSelect.disabled = !this.value;
+  });
+  
+  // 模型选择变化事件（只绑定一次）
+  contactModelSelect.addEventListener('change', function() {
+    const modelCustom = document.getElementById('contact-model-custom');
+    const websearchHint = document.getElementById('websearch-hint');
+    const deepthinkHint = document.getElementById('deepthink-hint');
+    const provider = contactProviderSelect.value;
+    
+    if (this.value === 'custom') {
+      modelCustom.style.display = 'block';
+      modelCustom.required = true;
+      modelCustom.focus();
+    } else {
+      modelCustom.style.display = 'none';
+      modelCustom.required = false;
+      
+      // 更新功能提示
+      const selectedOption = this.options[this.selectedIndex];
+      const supportsWebSearch = selectedOption.dataset.supportsWebSearch === 'true';
+      const supportsDeepThink = selectedOption.dataset.supportsDeepThink === 'true';
+      
+      if (supportsWebSearch) {
+        websearchHint.textContent = '该模型支持联网搜索功能';
+      } else {
+        websearchHint.textContent = '该模型疑似不支持此功能，可尝试开启';
+      }
+      
+      if (supportsDeepThink) {
+        deepthinkHint.textContent = '该模型支持深度思考功能';
+      } else {
+        deepthinkHint.textContent = '该模型疑似不支持此功能，可尝试开启';
+      }
+      
+      // DeepSeek 特殊处理
+      if (provider === 'DeepSeek') {
+        const websearchToggle = document.getElementById('websearch-toggle');
+        const deepthinkToggle = document.getElementById('deepthink-toggle');
+        
+        // DeepSeek 不支持联网搜索，禁用开关
+        websearchToggle.classList.remove('active');
+        websearchToggle.style.opacity = '0.5';
+        websearchToggle.style.pointerEvents = 'none';
+        websearchHint.textContent = 'DeepSeek 不支持联网搜索功能';
+        
+        // deepseek-reasoner 强制开启深度思考
+        if (this.value === 'deepseek-reasoner') {
+          deepthinkToggle.classList.add('active');
+          deepthinkToggle.style.opacity = '0.5';
+          deepthinkToggle.style.pointerEvents = 'none';
+          deepthinkHint.textContent = 'deepseek-reasoner 强制开启深度思考';
+        } else {
+          // deepseek-chat 禁用深度思考
+          deepthinkToggle.classList.remove('active');
+          deepthinkToggle.style.opacity = '0.5';
+          deepthinkToggle.style.pointerEvents = 'none';
+          deepthinkHint.textContent = 'deepseek-chat 不支持深度思考';
+        }
+      } else if (provider === 'Kimi') {
+        // Kimi 特殊处理
+        const websearchToggle = document.getElementById('websearch-toggle');
+        const deepthinkToggle = document.getElementById('deepthink-toggle');
+        
+        // 根据模型配置决定是否支持联网搜索
+        if (supportsWebSearch) {
+          websearchToggle.style.opacity = '';
+          websearchToggle.style.pointerEvents = '';
+          websearchHint.textContent = '该模型支持联网搜索功能';
+        } else {
+          websearchToggle.classList.remove('active');
+          websearchToggle.style.opacity = '0.5';
+          websearchToggle.style.pointerEvents = 'none';
+          websearchHint.textContent = '该模型不支持联网搜索功能';
+        }
+        
+        // kimi-k2-thinking 系列强制开启深度思考
+        if (this.value.includes('thinking')) {
+          deepthinkToggle.classList.add('active');
+          deepthinkToggle.style.opacity = '0.5';
+          deepthinkToggle.style.pointerEvents = 'none';
+          deepthinkHint.textContent = '该模型强制开启深度思考';
+        } else if (this.value === 'kimi-k2.5') {
+          // kimi-k2.5 支持手动控制深度思考
+          deepthinkToggle.style.opacity = '';
+          deepthinkToggle.style.pointerEvents = '';
+          deepthinkHint.textContent = 'kimi-k2.5 支持深度思考功能';
+        } else {
+          // 其他 Kimi 模型禁用深度思考
+          deepthinkToggle.classList.remove('active');
+          deepthinkToggle.style.opacity = '0.5';
+          deepthinkToggle.style.pointerEvents = 'none';
+          deepthinkHint.textContent = '该模型不支持深度思考';
+        }
+        
+        // Kimi 高级选项参数限制
+        const temperatureSlider = document.getElementById('temperature-slider');
+        const temperatureValue = document.getElementById('temperature-value');
+        const topPSlider = document.getElementById('top-p-slider');
+        const topPValue = document.getElementById('top-p-value');
+        
+        if (this.value === 'kimi-k2.5') {
+          // kimi-k2.5: temperature 和 top_p 不可修改
+          temperatureSlider.disabled = true;
+          temperatureSlider.style.opacity = '0.5';
+          temperatureValue.textContent = '不可修改';
+          temperatureValue.style.color = '#999';
+          
+          topPSlider.disabled = true;
+          topPSlider.style.opacity = '0.5';
+          topPValue.textContent = '0.95 (不可改)';
+          topPValue.style.color = '#999';
+        } else if (this.value.startsWith('kimi-k2')) {
+          // kimi-k2 系列: 参数可修改，恢复默认
+          temperatureSlider.disabled = false;
+          temperatureSlider.style.opacity = '';
+          temperatureValue.textContent = '0.6000';
+          temperatureValue.style.color = '';
+          temperatureSlider.value = '0.6';
+          
+          topPSlider.disabled = false;
+          topPSlider.style.opacity = '';
+          topPValue.textContent = '1.0000';
+          topPValue.style.color = '';
+          topPSlider.value = '1.0';
+        } else {
+          // moonshot-v1 系列: 参数可修改，恢复默认
+          temperatureSlider.disabled = false;
+          temperatureSlider.style.opacity = '';
+          temperatureValue.textContent = '0.0000';
+          temperatureValue.style.color = '';
+          temperatureSlider.value = '0';
+          
+          topPSlider.disabled = false;
+          topPSlider.style.opacity = '';
+          topPValue.textContent = '1.0000';
+          topPValue.style.color = '';
+          topPSlider.value = '1.0';
+        }
+      } else {
+        // 非 DeepSeek/Kimi 服务商，恢复开关状态
+        const websearchToggle = document.getElementById('websearch-toggle');
+        const deepthinkToggle = document.getElementById('deepthink-toggle');
+        websearchToggle.style.opacity = '';
+        websearchToggle.style.pointerEvents = '';
+        deepthinkToggle.style.opacity = '';
+        deepthinkToggle.style.pointerEvents = '';
+        
+        // 恢复高级选项参数控件状态
+        const temperatureSlider = document.getElementById('temperature-slider');
+        const temperatureValue = document.getElementById('temperature-value');
+        const topPSlider = document.getElementById('top-p-slider');
+        const topPValue = document.getElementById('top-p-value');
+        
+        temperatureSlider.disabled = false;
+        temperatureSlider.style.opacity = '';
+        temperatureValue.textContent = parseFloat(temperatureSlider.value).toFixed(4);
+        temperatureValue.style.color = '';
+        
+        topPSlider.disabled = false;
+        topPSlider.style.opacity = '';
+        topPValue.textContent = parseFloat(topPSlider.value).toFixed(4);
+        topPValue.style.color = '';
+      }
+    }
   });
   
   // 头像上传
@@ -3885,42 +4672,6 @@ function updateModelOptions(provider, apikeyId) {
   customOption.value = 'custom';
   customOption.textContent = '自定义模型';
   modelSelect.appendChild(customOption);
-  
-  // 模型选择变化事件
-  modelSelect.addEventListener('change', function() {
-    if (this.value === 'custom') {
-      modelCustom.style.display = 'block';
-      modelCustom.required = true;
-      modelCustom.focus();
-    } else {
-      modelCustom.style.display = 'none';
-      modelCustom.required = false;
-      
-      // 更新功能提示
-      const selectedOption = this.options[this.selectedIndex];
-      const supportsWebSearch = selectedOption.dataset.supportsWebSearch === 'true';
-      const supportsDeepThink = selectedOption.dataset.supportsDeepThink === 'true';
-      
-      if (supportsWebSearch) {
-        websearchHint.textContent = '该模型支持联网搜索功能';
-      } else {
-        websearchHint.textContent = '该模型疑似不支持此功能，可尝试开启';
-      }
-      
-      if (supportsDeepThink) {
-        deepthinkHint.textContent = '该模型支持深度思考功能';
-      } else {
-        deepthinkHint.textContent = '该模型疑似不支持此功能，可尝试开启';
-      }
-      
-      // 特殊处理 deepseek-reasoner 强制打开深度思考
-      if (provider === 'DeepSeek' && this.value === 'deepseek-reasoner') {
-        const deepthinkToggle = document.getElementById('deepthink-toggle');
-        deepthinkToggle.classList.add('active');
-        deepthinkHint.textContent = '该模型强制打开深度思考功能';
-      }
-    }
-  });
 }
 
 // 验证表单
@@ -3998,7 +4749,9 @@ function collectContactData() {
     } : null,
     createdAt: new Date().toISOString(),
     lastActive: null,
-    unreadCount: 0
+    unreadCount: 0,
+    isPinned: false,
+    isMuted: false
   };
 }
 
@@ -4092,8 +4845,8 @@ async function saveContact(contactData) {
   await saveContacts();
   
   // 重新渲染所有UI
-  renderContacts();
-  updatePopupContacts(); // 新增
+  await renderContacts();
+  await updatePopupContacts(); // 新增
   updateChatPage(); // 新增
   bindApiKeyEvents();
   
@@ -4172,11 +4925,11 @@ async function loadContacts() {
   }
   
   // 更新UI
-  updatePopupContacts(); // 新增
+  await updatePopupContacts(); // 新增
   updateChatPage(); // 新增
 }
 
-// 保存联系人到本地存储
+// 保存联系人（加密存储）
 async function saveContacts() {
   try {
     // 保存每个联系人的配置到单独的JSON文件
@@ -4205,7 +4958,7 @@ async function cleanupContactConfigs() {
 }
 
 // 渲染联系人列表
-function renderContacts() {
+async function renderContacts() {
   const contactsList = document.querySelector('.group-contacts');
   const groupCount = document.querySelector('.group-count');
   
@@ -4232,18 +4985,29 @@ function renderContacts() {
   contactsList.className = 'group-contacts';
   contactsList.innerHTML = '';
   
-  contacts.forEach(contact => {
-    const contactItem = createContactElement(contact);
-    contactsList.appendChild(contactItem);
+  // 对联系人排序：置顶的排在前面
+  const sortedContacts = [...contacts].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return 0;
+  });
+  
+  // 使用 Promise.all 并行创建所有联系人元素
+  const contactItems = await Promise.all(
+    sortedContacts.map(contact => createContactElement(contact))
+  );
+  
+  contactItems.forEach(item => {
+    contactsList.appendChild(item);
   });
   
   groupCount.textContent = contacts.length;
 }
 
 // 创建联系人元素
-function createContactElement(contact) {
+async function createContactElement(contact) {
   const item = document.createElement('div');
-  item.className = 'contact-item';
+  item.className = 'contact-item' + (contact.isPinned ? ' pinned' : '');
   item.dataset.id = contact.id;
   
   // 生成状态徽章
@@ -4252,28 +5016,47 @@ function createContactElement(contact) {
     statusBadge = `<span class="unread-badge">${contact.unreadCount}</span>`;
   }
   
-  // 生成最后活跃时间
+  // 生成置顶标识
+  let pinBadge = '';
+  if (contact.isPinned) {
+    pinBadge = `<span class="pin-badge" title="置顶">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2L12 8"/>
+        <path d="M12 8L16 12"/>
+        <path d="M12 8L8 12"/>
+        <path d="M12 12L12 22"/>
+      </svg>
+    </span>`;
+  }
+  
+  // 生成最后活跃时间（从聊天记录中读取最后一条消息的时间）
   let lastActive = '从未聊天';
-  if (contact.lastActive) {
-    const lastActiveDate = new Date(contact.lastActive);
-    const now = new Date();
-    const diffMs = now - lastActiveDate;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    if (diffMins < 60) {
-      lastActive = `${diffMins}分钟前`;
-    } else if (diffHours < 24) {
-      lastActive = `${diffHours}小时前`;
-    } else {
-      lastActive = `${diffDays}天前`;
+  try {
+    const messages = await loadChatHistoryFromStorage(contact.id);
+    if (messages.length > 0) {
+      // 获取最后一条消息的时间
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.time) {
+        lastActive = formatRelativeTime(new Date(lastMessage.time));
+      }
+    }
+  } catch (error) {
+    console.error('读取聊天记录失败:', error);
+    // 如果读取失败，使用 contact.lastActive 作为备用
+    if (contact.lastActive) {
+      lastActive = formatRelativeTime(new Date(contact.lastActive));
     }
   }
   
+  // 加载头像（处理文件路径转换）
+  const avatarSrc = await loadContactAvatar(contact.avatar);
+  
   item.innerHTML = `
-    <div class="contact-avatar">
-      <img src="${contact.avatar}" alt="${contact.nickname}" width="48" height="48">
+    <div class="contact-avatar-wrapper">
+      <div class="contact-avatar">
+        <img src="${avatarSrc}" alt="${contact.nickname}" width="48" height="48">
+      </div>
+      ${pinBadge}
     </div>
     <div class="contact-info">
       <div class="contact-name">${contact.nickname} ${statusBadge}</div>
@@ -4309,9 +5092,9 @@ function createContactElement(contact) {
   
   // 编辑按钮
   const editBtn = item.querySelector('.edit-contact');
-  editBtn.addEventListener('click', (e) => {
+  editBtn.addEventListener('click', async (e) => {
     e.stopPropagation();
-    editContact(contact.id);
+    await editContact(contact.id);
   });
   
   // 删除按钮
@@ -4325,35 +5108,35 @@ function createContactElement(contact) {
 }
 
 // 编辑联系人
-function editContact(id) {
+async function editContact(id) {
   const contact = contacts.find(c => c.id === id);
   if (!contact) return;
-  
+
   currentContactId = id;
-  
+
   // 解密数据
   const decryptedContact = decryptContact(contact);
-  
+
   // 填充表单
   const modal = document.getElementById('create-contact-modal');
   modal.style.display = 'block';
   document.getElementById('contact-modal-title').textContent = '编辑联系人';
-  
+
   // 填充基础数据
   document.getElementById('contact-provider').value = decryptedContact.provider;
   updateApikeyOptions(decryptedContact.provider);
-  
+
   // 设置API-Key（需要等待选项加载）
   setTimeout(() => {
     document.getElementById('contact-apikey').value = decryptedContact.apikeyId;
     updateModelOptions(decryptedContact.provider, decryptedContact.apikeyId);
-    
+
     // 设置模型
-    setTimeout(() => {
+    setTimeout(async () => {
       const modelSelect = document.getElementById('contact-model');
       const providerConfig = MODEL_CONFIGS[decryptedContact.provider];
       const isPresetModel = providerConfig?.models.some(m => m.id === decryptedContact.model);
-      
+
       if (isPresetModel) {
         modelSelect.value = decryptedContact.model;
       } else {
@@ -4361,10 +5144,10 @@ function editContact(id) {
         document.getElementById('contact-model-custom').value = decryptedContact.model;
         document.getElementById('contact-model-custom').style.display = 'block';
       }
-      
+
       document.getElementById('contact-nickname').value = decryptedContact.nickname;
       document.getElementById('contact-system-prompt').value = decryptedContact.systemPrompt || '';
-      document.getElementById('contact-avatar-preview').querySelector('img').src = decryptedContact.avatar;
+      document.getElementById('contact-avatar-preview').querySelector('img').src = await loadContactAvatar(decryptedContact.avatar);
       
       // 设置开关
       if (decryptedContact.roleplay) {
@@ -4424,9 +5207,9 @@ async function deleteContact(id) {
       contacts = contacts.filter(c => c.id !== id);
       
       // 更新UI
-      renderContacts();
-      updatePopupContacts();
-      
+      await renderContacts();
+      await updatePopupContacts();
+
       // 如果在聊天页面且正在与被删除的联系人聊天
       if (isInChatPage && isCurrentlyChattingWithDeleted) {
         // 立即清理当前聊天内容
@@ -4448,8 +5231,8 @@ async function deleteContact(id) {
       // 如果在联系人页面，切换到聊天页面
       if (currentActiveTab && currentActiveTab.getAttribute('data-tab') === 'contacts') {
         // 延迟一点再切换，确保删除操作完成
-        setTimeout(() => {
-          switchTab('chat', true);
+        setTimeout(async () => {
+          await switchTab('chat', true);
         }, 100);
       }
     }
@@ -4536,8 +5319,8 @@ async function switchToContactChat(contactId) {
   }
   
   // 更新UI
-  renderContacts();
-  updatePopupContacts();
+  await renderContacts();
+  await updatePopupContacts();
 }
 
 // Markdown 渲染函数
@@ -4631,11 +5414,8 @@ async function loadContactChatHistory(contactId) {
         </div>
       `;
     } else if (message.type === 'ai') {
-      // 处理AI消息的头像
-      let avatarSrc = message.avatar || 'images/app-icon.png';
-      if (avatarSrc && avatarSrc.startsWith('UserData/')) {
-        avatarSrc = await getUserDataPath(avatarSrc);
-      }
+      // 实时获取当前联系人头像
+      const avatarSrc = await getCurrentContactAvatar();
       
       let thinkingHTML = '';
       if (message.thinkingContent) {
@@ -4676,15 +5456,13 @@ async function loadContactChatHistory(contactId) {
         </div>
       `;
     } else if (message.type === 'user') {
-      // 处理用户消息的头像
-      let avatarSrc = message.avatar || 'images/app-icon.png';
-      if (avatarSrc && avatarSrc.startsWith('UserData/')) {
-        avatarSrc = await getUserDataPath(avatarSrc);
-      }
-      
+      // 实时获取当前用户头像
+      const userData = await getUserData();
+      const avatarSrc = userData.avatar || 'images/app-icon.png';
+
       // 格式化时间显示
       const displayTime = formatSmartDateTime(new Date(message.time));
-      
+
       messageHTML = `
         <div class="message user-message" id="${message.id || 'msg-' + Date.now() + '-' + Math.random()}">
           <div class="message-avatar">
@@ -4708,9 +5486,9 @@ async function loadContactChatHistory(contactId) {
 }
 
 // 初始化联系人功能
-function initContacts() {
+async function initContacts() {
   loadContacts();
-  renderContacts();
+  await renderContacts();
   initCreateContactModal();
   
   // 绑定聊天页面的添加联系人按钮
@@ -4723,16 +5501,16 @@ function initContacts() {
 }
 
 // 在DOM加载完成后初始化
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // 确保其他初始化函数先运行
-  initSidebarTabs();
+  await initSidebarTabs();
   initProfilePage();
   initSettingsPage();
   initMessageInputKeyboard();
-  
+
   // 初始化联系人功能
-  setTimeout(() => {
-    initContacts();
+  setTimeout(async () => {
+    await initContacts();
     initChatSendButton();
     console.log('联系人功能初始化完成');
   }, 100);
@@ -4776,6 +5554,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 聊天功能实现
 let currentChatHistory = [];
+
+// ============================================
+// 自动更新功能初始化
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  // 延迟初始化自动更新，避免影响启动速度
+  setTimeout(() => {
+    if (typeof initAutoUpdater === 'function') {
+      initAutoUpdater()
+      console.log('自动更新功能已初始化')
+    }
+  }, 3000)
+})
 let isSendingMessage = false;
 
 // 初始化发送按钮
@@ -4829,7 +5620,7 @@ async function handleSendMessage() {
   }
   
   console.log('读取的联系人数据:', contact);
-  
+
   // 解密API密钥
   let apiKey;
   try {
@@ -4838,11 +5629,12 @@ async function handleSendMessage() {
       mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7
     }).toString(CryptoJS.enc.Utf8);
+    console.log('【调试】主窗口解密后的API Key:', apiKey ? apiKey.substring(0, 10) + '...' : 'undefined');
   } catch (error) {
     customModal.alert('API密钥解密失败');
     return;
   }
-  
+
   if (!apiKey) {
     customModal.alert('API密钥无效');
     return;
@@ -4859,17 +5651,63 @@ async function handleSendMessage() {
   messageInput.value = '';
   
   try {
-    // 创建阿里云API实例
-    const aliyunAPI = new AliyunAPI(apiKey);
+    // 根据服务商类型创建对应的API实例
+    let apiInstance;
+    const provider = contact.provider || '阿里云百炼';
+    
+    switch (provider) {
+      case 'DeepSeek':
+        apiInstance = new DeepSeekAPI(apiKey);
+        break;
+      case 'Kimi':
+        apiInstance = new KimiAPI(apiKey);
+        break;
+      case '阿里云百炼':
+      default:
+        apiInstance = new AliyunAPI(apiKey);
+        break;
+    }
+    
+    console.log('使用服务商:', provider, 'API实例:', apiInstance.constructor.name);
     
     // 构建联系人配置
     let systemPrompt = contact.systemPrompt || '';
-    
-    // 从全局设置中读取历史记录记忆配置
+
+    // 从全局设置中读取配置
     const chatSettings = JSON.parse(localStorage.getItem('chatSettings') || '{}');
     const enableHistoryMemory = chatSettings.enableHistoryMemory || false;
     const historyMemoryRounds = chatSettings.historyMemoryRounds || 10;
-    
+
+    // 添加AI用户姓名到system prompt
+    const enableAiUserName = chatSettings.enableAiUserName || false;
+    const aiUserName = chatSettings.aiUserName || '';
+    if (enableAiUserName && aiUserName) {
+      systemPrompt = `用户的名字是：${aiUserName}\n\n` + systemPrompt;
+      console.log('已添加用户姓名到system prompt:', aiUserName);
+    }
+
+    // 加载长期记忆并添加到system prompt
+    const longTermMemories = await ipcRenderer.invoke('get-long-term-memories', contact.id);
+    if (longTermMemories.success && longTermMemories.memories && longTermMemories.memories.length > 0) {
+      // 按时间倒序，取最新的记忆
+      const sortedMemories = [...longTermMemories.memories].sort((a, b) => {
+        return new Date(b.createTime) - new Date(a.createTime)
+      })
+
+      let memoryText = '\n\n这是你和用户的历史记忆内容：\n<历史记忆>\n'
+
+      sortedMemories.forEach((memory, index) => {
+        memoryText += `[记忆${index + 1}]\n${memory.summary}\n\n`
+      })
+
+      memoryText += '</历史记忆>\n请根据以上历史记忆理解用户背景，更好地回答用户的问题。'
+
+      // 将长期记忆添加到system prompt的最前面
+      systemPrompt = memoryText + (systemPrompt ? '\n\n' + systemPrompt : '')
+
+      console.log('已添加长期记忆到system prompt，记忆数量:', sortedMemories.length)
+    }
+
     // 加载历史记录并添加到system prompt
     const chatHistory = await loadChatHistoryFromStorage(contact.id);
     
@@ -4944,7 +5782,7 @@ async function handleSendMessage() {
         // 流式传输：创建占位符
         aiMessageId = await addMessageToChat('ai', '', true);
         
-        response = await aliyunAPI.chatCompletionWithThinkingAndSearch(
+        response = await apiInstance.chatCompletionWithThinkingAndSearch(
           contactConfig,
           messages,
           (content) => {
@@ -4967,33 +5805,27 @@ async function handleSendMessage() {
         );
       } else {
         // 非流式传输：等待完整响应
-        response = await aliyunAPI.chatCompletionWithThinkingAndSearch(
+        response = await apiInstance.chatCompletionWithThinkingAndSearch(
           contactConfig,
           messages,
           null, // 不传回调，等待完整响应
           null,
           null
         );
-        
-        // 收到完整响应后创建消息
+
+        // 收到完整响应后处理显示
         if (response.choices && response.choices.length > 0) {
           const choice = response.choices[0];
           let finalContent = '';
-          
+
           // 先创建基本消息内容
           if (choice.message && choice.message.content) {
             finalContent += choice.message.content;
           }
-          
-          // 创建AI消息
-          aiMessageId = await addMessageToChat('ai', finalContent, false);
-          
-          // 如果有思考内容，单独添加思考容器
-          if (choice.message && choice.message.reasoning_content) {
-            console.log('非流式模式：准备添加思考内容', aiMessageId, choice.message.reasoning_content);
-            updateThinkingContent(aiMessageId, choice.message.reasoning_content);
-            console.log('非流式模式：思考内容添加完成');
-          }
+
+          // 使用统一的处理函数（深度思考模式下不使用分段式回复）
+          const thinkingContent = choice.message && choice.message.reasoning_content ? choice.message.reasoning_content : null;
+          aiMessageId = await handleAIResponseDisplay(finalContent, contact, true, thinkingContent);
         }
       }
     } else if (contact.deepthink) {
@@ -5008,7 +5840,7 @@ async function handleSendMessage() {
         // 流式传输：创建占位符
         aiMessageId = await addMessageToChat('ai', '', true);
         
-        response = await aliyunAPI.chatCompletionWithThinking(
+        response = await apiInstance.chatCompletionWithThinking(
           contactConfig,
           messages,
           (content) => {
@@ -5031,7 +5863,7 @@ async function handleSendMessage() {
         );
       } else {
         // 非流式传输：等待完整响应
-        response = await aliyunAPI.chatCompletionWithThinking(
+        response = await apiInstance.chatCompletionWithThinking(
           contactConfig,
           messages,
           null, // 不传回调，等待完整响应
@@ -5039,27 +5871,19 @@ async function handleSendMessage() {
           null
         );
         
-        // 收到完整响应后创建消息
+        // 收到完整响应后，根据设置延迟显示
         if (response.choices && response.choices.length > 0) {
           const choice = response.choices[0];
           let finalContent = '';
-          let hasThinkingContent = false;
-          
+
           // 先创建基本消息内容
           if (choice.message && choice.message.content) {
             finalContent += choice.message.content;
           }
-          
-          // 创建AI消息
-          aiMessageId = await addMessageToChat('ai', finalContent, false);
-          
-          // 如果有思考内容，单独添加思考容器
-          if (choice.message && choice.message.reasoning_content) {
-            hasThinkingContent = true;
-            console.log('非流式模式：准备添加思考内容', aiMessageId, choice.message.reasoning_content);
-            updateThinkingContent(aiMessageId, choice.message.reasoning_content);
-            console.log('非流式模式：思考内容添加完成');
-          }
+
+          // 使用统一的处理函数（深度思考模式下不使用分段式回复）
+          const thinkingContent = choice.message && choice.message.reasoning_content ? choice.message.reasoning_content : null;
+          aiMessageId = await handleAIResponseDisplay(finalContent, contact, true, thinkingContent);
         }
       }
     } else if (contact.websearch) {
@@ -5073,7 +5897,7 @@ async function handleSendMessage() {
         aiMessageId = await addMessageToChat('ai', '', true);
         
         let aiContent = '';
-        response = await aliyunAPI.chatCompletionWithSearch(contactConfig, messages, (content) => {
+        response = await apiInstance.chatCompletionWithSearch(contactConfig, messages, (content) => {
           console.log('联网搜索流式更新:', content);
           // content 已经是累积的完整内容，直接赋值即可
           aiContent = content;
@@ -5087,40 +5911,43 @@ async function handleSendMessage() {
       } else {
         // 非流式传输：等待响应后再创建消息
         console.log('联网搜索：使用非流式传输');
-        response = await aliyunAPI.chatCompletionWithSearch(contactConfig, messages);
+        response = await apiInstance.chatCompletionWithSearch(contactConfig, messages);
         
         if (response.choices && response.choices.length > 0) {
           const aiContent = response.choices[0].message.content;
-          aiMessageId = await addMessageToChat('ai', aiContent);
+          // 使用统一的处理函数（联网搜索模式下不使用分段式回复）
+          aiMessageId = await handleAIResponseDisplay(aiContent, contact, false, null);
         }
       }
     } else {
       // 普通模式
       const isStreaming = !contactConfig.isRolePlay;
-      
+
       if (isStreaming) {
         // 流式传输：先创建空消息占位符
         aiMessageId = await addMessageToChat('ai', '', true);
-        
+
         let aiContent = '';
-        response = await aliyunAPI.chatCompletion(contactConfig, messages, (content) => {
+        response = await apiInstance.chatCompletion(contactConfig, messages, (content) => {
           // 流式传输时的实时更新
           // content 已经是累积的完整内容，直接赋值即可
           aiContent = content;
           updateMessageContent(aiMessageId, content);
         });
-        
+
         // 流式传输完成后保存AI回复
         if (aiContent) {
           saveMessageToHistory('ai', aiContent, new Date().toISOString());
         }
       } else {
         // 非流式传输：等待响应后再创建消息
-        response = await aliyunAPI.chatCompletion(contactConfig, messages);
-        
+        response = await apiInstance.chatCompletion(contactConfig, messages);
+
         if (response.choices && response.choices.length > 0) {
           const aiContent = response.choices[0].message.content;
-          aiMessageId = await addMessageToChat('ai', aiContent);
+
+          // 使用统一的处理函数（支持分段式回复）
+          aiMessageId = await handleAIResponseDisplay(aiContent, contact, false, null);
         }
       }
     }
@@ -5146,6 +5973,36 @@ async function handleSendMessage() {
 }
 
 // 添加消息到聊天界面
+
+// 相对时间格式化函数（x秒前、x分钟前、x小时前、x天前、x月前、x年前）
+function formatRelativeTime(date) {
+  const now = new Date();
+  const targetDate = new Date(date);
+  const diffMs = now - targetDate;
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  const diffMonths = Math.floor(diffDays / 30);
+  const diffYears = Math.floor(diffDays / 365);
+  
+  if (diffSeconds < 10) {
+    return '刚刚';
+  } else if (diffSeconds < 60) {
+    return `${diffSeconds}秒前`;
+  } else if (diffMinutes < 60) {
+    return `${diffMinutes}分钟前`;
+  } else if (diffHours < 24) {
+    return `${diffHours}小时前`;
+  } else if (diffDays < 30) {
+    return `${diffDays}天前`;
+  } else if (diffMonths < 12) {
+    return `${diffMonths}个月前`;
+  } else {
+    return `${diffYears}年前`;
+  }
+}
+
 // 智能日期格式化函数
 function formatSmartDateTime(date) {
   const now = new Date();
@@ -5231,6 +6088,27 @@ async function addMessageToChat(role, content, isPlaceholder = false) {
   // 保存消息到聊天记录（占位符消息不保存）
   if (!isPlaceholder) {
     await saveMessageToHistory(role, content, new Date().toISOString());
+    
+    // AI 消息且窗口不可见时发送通知
+    if (role === 'ai') {
+      const chatHeader = document.querySelector('.chat-header');
+      const contactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
+      const contact = contactId ? contacts.find(c => c.id === contactId) : null;
+      
+      // 检查是否开启了消息免打扰
+      if (contact && contact.isMuted) {
+        console.log('该联系人已开启消息免打扰，不发送通知');
+      } else {
+        const contactName = contact ? contact.nickname : 'AI';
+        
+        ipcRenderer.send('ai-message-received', {
+          contactName: contactName,
+          message: content,
+          contactId: contactId,
+          contactAvatar: contact ? contact.avatar : null
+        });
+      }
+    }
   }
   
   return messageId;
@@ -5270,51 +6148,39 @@ async function saveMessageToHistory(role, content, time, thinkingContent = null)
   try {
     const chatHeader = document.querySelector('.chat-header');
     const contactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
-    
+
     if (!contactId) {
       console.warn('没有当前联系人，无法保存聊天记录');
       return;
     }
-    
+
     // 加载现有聊天记录
     const messages = await loadChatHistoryFromStorage(contactId);
-    
-    // 获取头像URL
-    let avatar;
-    if (role === 'user') {
-      // 对于用户消息，获取用户头像
-      const userData = await getUserData();
-      avatar = userData.avatar || 'images/app-icon.png';
-    } else {
-      // 对于AI消息，获取联系人头像
-      avatar = await getCurrentContactAvatar();
-    }
-    
-    // 添加新消息
+
+    // 添加新消息（不保存头像，渲染时实时获取）
     const message = {
       id: 'msg-' + Date.now(),
       type: role,
       content: content,
-      time: time,
-      avatar: avatar
+      time: time
     };
-    
+
     // 如果是AI消息且有思考内容，添加思考内容
     if (role === 'ai' && thinkingContent) {
       message.thinkingContent = thinkingContent;
     }
-    
+
     messages.push(message);
-    
+
     // 限制聊天记录数量，避免存储过多数据（最多保存100条）
     if (messages.length > 100) {
       messages.splice(0, messages.length - 100);
     }
-    
+
     // 保存到本地存储
     await saveChatHistory(contactId, messages);
     console.log('消息已保存到聊天记录:', message);
-    
+
   } catch (error) {
     console.error('保存消息到聊天记录失败:', error);
   }
@@ -5405,25 +6271,34 @@ function updateThinkingContent(messageId, thinkingContent) {
   if (thinkingText) {
     console.log('更新深度思考文本内容');
     thinkingText.innerHTML = thinkingContent.replace(/\n/g, '<br>');
-    
+
     // 只有在内容为空或者新创建时才显示，否则保持当前的收起/展开状态
     if (thinkingText.innerHTML.trim() === '' || isNewlyCreated) {
       thinkingText.classList.remove('thinking-text-hidden');
       toggleBtn.textContent = '收起';
       console.log('设置思考文本为显示状态，按钮文本为收起');
     }
-    
+
     // 确保思考容器可见
     thinkingDiv.style.display = 'block';
     console.log('思考容器显示状态:', thinkingDiv.style.display);
+
+    // 思考内容内部自动滚动到底部
+    thinkingText.scrollTop = thinkingText.scrollHeight;
   } else {
     console.error('找不到thinking-text元素');
   }
   
   // 显示思考容器
   thinkingDiv.style.display = 'block';
-  
+
   // 收起/展开事件处理已经通过全局事件委托实现，这里不需要重复绑定
+
+  // 滚动到底部，确保思考内容可见
+  const chatMessages = document.getElementById('chat-messages');
+  if (chatMessages) {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
 }
 
 // 获取当前联系人头像
@@ -5535,4 +6410,138 @@ function clearChatMessages() {
   if (noContactPrompt) {
     noContactPrompt.style.display = 'flex';
   }
+}
+
+// 监听聊天记录更新事件（来自聊天记录管理窗口）
+ipcRenderer.on('chat-history-updated', async (event, data) => {
+  console.log('收到聊天记录更新通知:', data);
+  
+  if (data && data.contactId) {
+    // 获取当前聊天窗口中的联系人ID
+    const chatHeader = document.querySelector('.chat-header');
+    const currentContactId = chatHeader ? chatHeader.getAttribute('data-contact-id') : null;
+    
+    // 如果当前正在查看该联系人的聊天记录，则刷新显示
+    if (currentContactId === data.contactId) {
+      console.log('刷新当前聊天记录:', data.contactId);
+      
+      // 刷新聊天记录显示
+      await refreshChatMessages(data.contactId);
+      
+      // 显示提示
+      showToast('聊天记录已更新');
+    }
+  }
+});
+
+// 刷新聊天消息显示
+async function refreshChatMessages(contactId) {
+  const chatMessages = document.getElementById('chat-messages');
+  if (!chatMessages) return;
+  
+  // 获取联系人信息
+  const contact = contacts.find(c => c.id === contactId);
+  if (!contact) return;
+  
+  // 从存储加载最新聊天记录
+  const messages = await loadChatHistoryFromStorage(contactId);
+  
+  // 清空当前显示（保留无联系人提示）
+  const noContactPrompt = document.getElementById('no-contact-chat-prompt');
+  chatMessages.innerHTML = '';
+  if (noContactPrompt) {
+    chatMessages.appendChild(noContactPrompt);
+    noContactPrompt.style.display = 'none';
+  }
+  
+  // 获取用户数据用于显示头像
+  const userData = await getUserData();
+  const userAvatar = userData.avatar || 'images/app-icon.png';
+  
+  // 重新渲染所有消息
+  for (const msg of messages) {
+    const isUser = msg.type === 'user';
+    const avatar = isUser ? userAvatar : (contact.avatar || 'images/app-icon.png');
+    const sender = isUser ? (userData.username || '我') : (contact.nickname || 'AI');
+    const time = formatMessageTime(msg.time || msg.timestamp);
+    
+    const messageHTML = `
+      <div class="message ${isUser ? 'user-message' : 'ai-message'}" data-message-id="${msg.id || Date.now()}">
+        ${isUser ? '' : `
+        <div class="message-avatar">
+          <img src="${avatar}" alt="${sender}" onerror="this.src='images/app-icon.png'">
+        </div>
+        `}
+        <div class="message-content">
+          <div class="message-bubble">
+            ${escapeHtml(msg.content)}
+          </div>
+          <div class="message-time">${time}</div>
+        </div>
+        ${isUser ? `
+        <div class="message-avatar">
+          <img src="${avatar}" alt="${sender}" onerror="this.src='images/app-icon.png'">
+        </div>
+        ` : ''}
+      </div>
+    `;
+    
+    chatMessages.insertAdjacentHTML('beforeend', messageHTML);
+  }
+  
+  // 滚动到底部
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// 格式化消息时间
+function formatMessageTime(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  return date.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+// HTML转义函数
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// 显示 Toast 提示
+function showToast(message) {
+  // 创建 toast 元素
+  let toast = document.getElementById('sync-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'sync-toast';
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    `;
+    document.body.appendChild(toast);
+  }
+  
+  toast.textContent = message;
+  toast.style.opacity = '1';
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+  }, 3000);
 }

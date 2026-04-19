@@ -5,24 +5,22 @@
  * Unauthorized copying, distribution, or use of this software is strictly prohibited.
  */
 
-// 阿里云API调用模块
-class AliyunAPI {
+// DeepSeek API调用模块 - 与 OpenAI 兼容的 API 格式
+class DeepSeekAPI {
   constructor(apiKey) {
     this.apiKey = apiKey
-    this.baseURL = 'https://dashscope.aliyuncs.com'
+    this.baseURL = 'https://api.deepseek.com'
   }
 
   // 普通聊天调用
   async chatCompletion(contactConfig, messages, onMessage = null) {
     const {
-      model = 'qwen-plus',
-      enableSearch = false,
-      enableThinking = false,
+      model = 'deepseek-chat',
       systemPrompt = '',
       isRolePlay = false
     } = contactConfig
 
-    // 构建请求体 - 使用兼容模式格式
+    // 构建请求体
     const requestBody = {
       model: model,
       messages: [],
@@ -41,7 +39,7 @@ class AliyunAPI {
     requestBody.messages.push(...messages)
 
     try {
-      const response = await fetch(`${this.baseURL}/compatible-mode/v1/chat/completions`, {
+      const response = await fetch(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
@@ -51,7 +49,8 @@ class AliyunAPI {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`)
       }
 
       // 如果是流式传输，需要特殊处理SSE格式
@@ -62,7 +61,7 @@ class AliyunAPI {
       const data = await response.json()
       return data
     } catch (error) {
-      console.error('阿里云API调用失败:', error)
+      console.error('DeepSeek API调用失败:', error)
       throw error
     }
   }
@@ -126,10 +125,10 @@ class AliyunAPI {
     }
   }
 
-  // 深度思考调用（支持流式和非流式）
+  // 深度思考调用（deepseek-reasoner）
   async chatCompletionWithThinking(contactConfig, messages, onMessage, onThinking, onComplete) {
     const {
-      model = 'qwen-plus',
+      model = 'deepseek-reasoner',
       systemPrompt = ''
     } = contactConfig
 
@@ -140,11 +139,7 @@ class AliyunAPI {
     const requestBody = {
       model: model,
       messages: [],
-      stream: isStreaming,
-      stream_options: isStreaming ? {
-        include_usage: true
-      } : undefined,
-      enable_thinking: true
+      stream: isStreaming
     }
 
     // 添加系统提示
@@ -159,7 +154,7 @@ class AliyunAPI {
     requestBody.messages.push(...messages)
 
     try {
-      const response = await fetch(`${this.baseURL}/compatible-mode/v1/chat/completions`, {
+      const response = await fetch(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
@@ -169,7 +164,8 @@ class AliyunAPI {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`)
       }
 
       if (isStreaming) {
@@ -204,7 +200,7 @@ class AliyunAPI {
                 if (data.choices && data.choices.length > 0) {
                   const choice = data.choices[0]
                   
-                  // 处理深度思考内容
+                  // DeepSeek reasoner 的思考内容在 reasoning_content 字段
                   if (choice.delta && choice.delta.reasoning_content) {
                     console.log('收到深度思考内容:', choice.delta.reasoning_content)
                     if (onThinking) onThinking(choice.delta.reasoning_content)
@@ -240,178 +236,7 @@ class AliyunAPI {
         return result
       }
     } catch (error) {
-      console.error('阿里云深度思考API调用失败:', error)
-      throw error
-    }
-  }
-
-  // 联网搜索调用（支持流式传输）
-  async chatCompletionWithSearch(contactConfig, messages, onMessage = null) {
-    const {
-      model = 'qwen-plus',
-      systemPrompt = ''
-    } = contactConfig
-
-    // 判断是否使用流式传输
-    const isStreaming = !!onMessage
-
-    // 构建请求体
-    const requestBody = {
-      model: model,
-      messages: [],
-      stream: isStreaming,
-      enable_search: true
-    }
-
-    // 添加系统提示
-    if (systemPrompt) {
-      requestBody.messages.push({
-        role: 'system',
-        content: systemPrompt
-      })
-    }
-
-    // 添加用户消息
-    requestBody.messages.push(...messages)
-
-    try {
-      const response = await fetch(`${this.baseURL}/compatible-mode/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      if (isStreaming) {
-        // 流式传输处理
-        return await this._handleStreamResponse(response, onMessage)
-      } else {
-        // 非流式传输
-        const data = await response.json()
-        return data
-      }
-    } catch (error) {
-      console.error('阿里云联网搜索API调用失败:', error)
-      throw error
-    }
-  }
-
-  // 深度思考 + 联网搜索调用（支持流式和非流式）
-  async chatCompletionWithThinkingAndSearch(contactConfig, messages, onMessage, onThinking, onComplete) {
-    const {
-      model = 'qwen-plus',
-      systemPrompt = ''
-    } = contactConfig
-
-    // 判断是否使用流式传输
-    const isStreaming = !!(onMessage || onThinking || onComplete)
-
-    // 构建请求体
-    const requestBody = {
-      model: model,
-      messages: [],
-      stream: isStreaming,
-      stream_options: isStreaming ? {
-        include_usage: true
-      } : undefined,
-      enable_thinking: true,
-      enable_search: true
-    }
-
-    // 添加系统提示
-    if (systemPrompt) {
-      requestBody.messages.push({
-        role: 'system',
-        content: systemPrompt
-      })
-    }
-
-    // 添加用户消息
-    requestBody.messages.push(...messages)
-
-    try {
-      const response = await fetch(`${this.baseURL}/compatible-mode/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      if (isStreaming) {
-        // 流式传输处理 - 同时处理深度思考和正常回复
-        const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let buffer = ''
-
-        while (true) {
-          const { done, value } = await reader.read()
-          
-          if (done) break
-          
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
-
-          for (const line of lines) {
-            if (line.trim() === '') continue
-            
-            if (line.startsWith('data: ')) {
-              const dataStr = line.slice(6)
-              
-              if (dataStr === '[DONE]') {
-                if (onComplete) onComplete()
-                return
-              }
-
-              try {
-                const data = JSON.parse(dataStr)
-                
-                if (data.choices && data.choices.length > 0) {
-                  const choice = data.choices[0]
-                  
-                  // 处理深度思考内容
-                  if (choice.delta && choice.delta.reasoning_content) {
-                    console.log('收到深度思考内容:', choice.delta.reasoning_content)
-                    if (onThinking) onThinking(choice.delta.reasoning_content)
-                  }
-                  
-                  // 处理正常回复内容
-                  if (choice.delta && choice.delta.content) {
-                    console.log('收到正常回复内容:', choice.delta.content)
-                    if (onMessage) onMessage(choice.delta.content)
-                  }
-                  
-                  // 处理完成状态
-                  if (choice.finish_reason) {
-                    if (onComplete) onComplete()
-                    return
-                  }
-                }
-              } catch (e) {
-                console.warn('解析SSE数据失败:', e, '原始数据:', dataStr)
-              }
-            }
-          }
-        }
-      } else {
-        // 非流式传输
-        const data = await response.json()
-        return data
-      }
-    } catch (error) {
-      console.error('阿里云深度思考+联网搜索API调用失败:', error)
+      console.error('DeepSeek 深度思考API调用失败:', error)
       throw error
     }
   }
@@ -419,10 +244,10 @@ class AliyunAPI {
 
 // 全局变量（用于浏览器环境）
 if (typeof window !== 'undefined') {
-  window.AliyunAPI = AliyunAPI
+  window.DeepSeekAPI = DeepSeekAPI
 }
 
 // 模块导出（用于Node.js环境）
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { AliyunAPI }
+  module.exports = { DeepSeekAPI }
 }

@@ -1,3 +1,10 @@
+/**
+ * Copyright (C) 2026 BlackHoleEra-Team All Rights Reserved
+ * 
+ * This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use of this software is strictly prohibited.
+ */
+
 /* 全局样式 */
 * {
   margin: 0;
@@ -3342,73 +3349,169 @@ body.dark-mode .about-copyright {
 }
 
 .chat-menu-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  width: 280px;
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  min-width: 160px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
+  transform: translateX(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
+  padding: 12px 8px;
 }
 
 .chat-menu-dropdown.show {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
 .chat-menu-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 14px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
   color: #333;
   font-size: 14px;
-  border-radius: 8px;
-  margin: 4px;
+  border-radius: 10px;
+  margin: 4px 8px;
 }
 
 .chat-menu-item:hover {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .chat-menu-item svg {
   flex-shrink: 0;
+  color: #666;
+}
+
+.chat-menu-item:hover svg {
+  color: #333;
+}
+
+/* 菜单分隔线 */
+.chat-menu-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 8px 16px;
+}
+
+/* 危险操作项（如删除） */
+.chat-menu-item.danger {
+  color: #e74c3c;
+}
+
+.chat-menu-item.danger:hover {
+  background: rgba(231, 76, 60, 0.1);
+}
+
+.chat-menu-item.danger svg {
+  color: #e74c3c;
+}
+
+/* 开关样式菜单项 */
+.chat-menu-item.toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toggle-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 开关按钮 */
+.toggle-switch {
+  width: 44px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-switch.active {
+  background: #667eea;
+}
+
+.toggle-slider {
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active .toggle-slider {
+  transform: translateX(20px);
 }
 
 /* 深色模式下的聊天菜单 */
+body.dark-mode .chat-menu-dropdown {
+  background: rgba(40, 40, 45, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .toggle-switch {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .toggle-switch.active {
+  background: #667eea;
+}
+
+body.dark-mode .chat-menu-item {
+  color: #fff;
+}
+
+body.dark-mode .chat-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .chat-menu-item svg {
+  color: #aaa;
+}
+
+body.dark-mode .chat-menu-item:hover svg {
+  color: #fff;
+}
+
+body.dark-mode .chat-menu-divider {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .chat-menu-item.danger {
+  color: #ff6b6b;
+}
+
+body.dark-mode .chat-menu-item.danger:hover {
+  background: rgba(255, 107, 107, 0.15);
+}
+
 body.dark-mode .chat-menu-btn {
   background: rgba(255, 255, 255, 0.1);
   color: #ccc;
 }
 
 body.dark-mode .chat-menu-btn:hover {
-  background: rgba(102, 126, 234, 0.2);
-  color: #667eea;
-}
-
-body.dark-mode .chat-menu-dropdown {
-  background: rgba(40, 40, 40, 0.95);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode .chat-menu-item {
-  color: #e0e0e0;
-}
-
-body.dark-mode .chat-menu-item:hover {
   background: rgba(102, 126, 234, 0.2);
   color: #667eea;
 }
@@ -4263,6 +4366,42 @@ body.dark-mode .message-input::placeholder {
   flex-shrink: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* 置顶标识 */
+.pin-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.4);
+  z-index: 2;
+}
+
+.pin-badge svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* 置顶联系人高亮 */
+.contact-item.pinned {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+/* 头像包装器（用于放置置顶标识） */
+.contact-avatar-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
 }
 
 .contact-item:hover .contact-avatar {
@@ -4327,6 +4466,27 @@ body.dark-mode .message-input::placeholder {
   color: #667eea;
   transform: scale(1.15) rotate(5deg);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+/* 联系人元信息区域 */
+.contact-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+/* 最后活跃时间 */
+.contact-last-active {
+  font-size: 11px;
+  color: #999;
+  white-space: nowrap;
+}
+
+/* 联系人操作按钮组 */
+.contact-actions {
+  display: flex;
+  gap: 6px;
 }
 
 /* 深色模式 联系人页面样式 */
@@ -4403,6 +4563,10 @@ body.dark-mode .contact-action {
 body.dark-mode .contact-action:hover {
   background: rgba(102, 126, 234, 0.2);
   color: #667eea;
+}
+
+body.dark-mode .contact-last-active {
+  color: #777;
 }
 
 /* 按钮点击波纹效果 */

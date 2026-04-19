@@ -1,0 +1,159 @@
+<!--
+  Copyright (C) 2026 BlackHoleEra-Team All Rights Reserved
+  
+  This software is proprietary and confidential.
+  Unauthorized copying, distribution, or use of this software is strictly prohibited.
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>无界</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      overflow: hidden;
+      user-select: none;
+      background: transparent;
+    }
+    
+    /* 浅色模式 */
+    body.light-mode .tray-container {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    body.light-mode .tray-item {
+      color: #333;
+    }
+    
+    body.light-mode .tray-item:hover {
+      background: #f0f0f0;
+    }
+    
+    body.light-mode .tray-divider {
+      background: #e5e5e5;
+    }
+    
+    /* 深色模式 */
+    body.dark-mode .tray-container {
+      background: #2d2d30;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+    
+    body.dark-mode .tray-item {
+      color: #e0e0e0;
+    }
+    
+    body.dark-mode .tray-item:hover {
+      background: #3e3e42;
+    }
+    
+    body.dark-mode .tray-divider {
+      background: #3e3e42;
+    }
+    
+    .tray-container {
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 6px;
+    }
+    
+    .tray-content {
+      padding: 4px;
+    }
+    
+    .tray-item {
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    
+    .tray-item svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.6;
+    }
+    
+    .tray-divider {
+      height: 1px;
+      margin: 3px 6px;
+    }
+    
+    .tray-item.danger {
+      color: #ff4d4f;
+    }
+    
+    body.dark-mode .tray-item.danger {
+      color: #ff7875;
+    }
+  </style>
+</head>
+<body class="light-mode">
+  <div class="tray-container">
+    <div class="tray-content">
+      <div class="tray-item" id="show-window">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+        </svg>
+        <span>打开无界</span>
+      </div>
+      
+      <div class="tray-divider"></div>
+      
+      <div class="tray-item danger" id="quit-app">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span>退出</span>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const { ipcRenderer } = require('electron')
+    
+    // 应用主题
+    function applyTheme(theme) {
+      document.body.className = theme + '-mode'
+    }
+    
+    // 初始化时从主进程获取主题
+    ipcRenderer.invoke('get-app-theme').then(theme => {
+      applyTheme(theme || 'light')
+    })
+    
+    // 监听主题变化
+    ipcRenderer.on('theme-changed', (event, theme) => {
+      applyTheme(theme)
+    })
+    
+    // 显示主窗口
+    document.getElementById('show-window').addEventListener('click', () => {
+      ipcRenderer.send('tray-show-window')
+    })
+    
+    // 退出应用
+    document.getElementById('quit-app').addEventListener('click', () => {
+      ipcRenderer.send('tray-quit')
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,852 @@
+/**
+ * Copyright (C) 2026 BlackHoleEra-Team All Rights Reserved
+ * 
+ * This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use of this software is strictly prohibited.
+ */
+
+/* 全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f5f5f5;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+/* 窗口容器 */
+.window-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #ffffff;
+}
+
+/* 标题栏 */
+.title-bar {
+  height: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+}
+
+.title-bar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.title-icon {
+  opacity: 0.9;
+}
+
+.title-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.window-controls {
+  display: flex;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.window-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.window-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.window-btn.close:hover {
+  background: #ff5f57;
+}
+
+/* 主内容区 */
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 联系人信息头部 */
+.contact-header {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.contact-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.contact-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.contact-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.contact-name {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contact-stats {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.stats-number {
+  font-weight: 600;
+  color: #ffd700;
+}
+
+/* 操作按钮区 */
+.action-bar {
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.action-btn.secondary {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.action-btn.secondary:hover {
+  background: #e0e0e0;
+}
+
+.action-btn.secondary.active {
+  background: #667eea;
+  color: #fff;
+}
+
+.action-btn.danger {
+  background: #fff0f0;
+  color: #dc3545;
+  border: 1px solid #ffcdd2;
+}
+
+.action-btn.danger:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* 搜索区域 */
+.search-container {
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+}
+
+.search-box:focus-within {
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.search-box svg {
+  color: #999;
+  flex-shrink: 0;
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #333;
+  outline: none;
+}
+
+.search-box input::placeholder {
+  color: #999;
+}
+
+.search-clear {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #999;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.search-clear:hover {
+  background: #e0e0e0;
+  color: #666;
+}
+
+.search-stats {
+  font-size: 12px;
+  color: #667eea;
+  margin-top: 6px;
+  min-height: 18px;
+}
+
+/* 搜索进度条 */
+.search-progress-container {
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.search-progress-bar {
+  height: 4px;
+  background: #e8e8e8;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.search-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 2px;
+  transition: width 0.1s ease;
+  width: 0%;
+}
+
+.search-progress-text {
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* 高亮搜索关键词 */
+.highlight-match {
+  background: #ffeb3b;
+  color: #333;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* 消息列表容器 */
+.messages-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+
+.messages-header {
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.messages-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.sort-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fff;
+  color: #666;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+  background: #f5f5f5;
+  border-color: #d0d0d0;
+}
+
+.sort-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.sort-btn.asc svg {
+  transform: rotate(180deg);
+}
+
+/* 消息列表 */
+.messages-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+}
+
+.message-item {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.message-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.message-item.user {
+  border-left: 4px solid #667eea;
+}
+
+.message-item.ai {
+  border-left: 4px solid #764ba2;
+}
+
+.message-item.selectable {
+  cursor: pointer;
+}
+
+.message-item.selected {
+  background: #e8f0fe;
+  border: 2px solid #667eea;
+}
+
+.message-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #667eea;
+  cursor: pointer;
+}
+
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.message-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.message-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.message-sender {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.message-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.message-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+  word-wrap: break-word;
+}
+
+/* 空状态 */
+.empty-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+  color: #999;
+}
+
+.empty-state.show {
+  display: flex;
+}
+
+.empty-state svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.empty-state span {
+  font-size: 13px;
+  color: #999;
+}
+
+/* 模态框 */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.modal-message {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-btn.secondary {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.modal-btn.secondary:hover {
+  background: #e0e0e0;
+}
+
+.modal-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.modal-btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.modal-btn.danger {
+  background: #dc3545;
+  color: #fff;
+}
+
+.modal-btn.danger:hover {
+  background: #c82333;
+}
+
+/* Toast 提示 */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #333;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 1001;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* 滚动条样式 */
+.messages-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.messages-list::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* 深色模式 - 通过 body.dark-mode 类控制 */
+body.dark-mode {
+  background: #1e1e1e;
+}
+
+body.dark-mode .window-container {
+  background: #2d2d30;
+}
+
+body.dark-mode .contact-header {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+}
+
+body.dark-mode .contact-name {
+  color: #fff;
+}
+
+body.dark-mode .contact-stats {
+  color: #b0b0b0;
+}
+
+body.dark-mode .action-bar {
+  background: #2d2d30;
+  border-bottom-color: #3e3e42;
+}
+
+body.dark-mode .action-btn.secondary {
+  background: #3e3e42;
+  color: #e0e0e0;
+}
+
+body.dark-mode .action-btn.secondary:hover {
+  background: #4e4e52;
+}
+
+body.dark-mode .action-btn.danger {
+  background: #5c2a2a;
+  border-color: #7a3a3a;
+}
+
+body.dark-mode .action-btn.primary {
+  background: linear-gradient(135deg, #5a6fd6 0%, #6b4fa3 100%);
+}
+
+/* 搜索区域深色模式 */
+body.dark-mode .search-container {
+  background: #2d2d30;
+  border-bottom-color: #3e3e42;
+}
+
+body.dark-mode .search-box {
+  background: #3e3e42;
+}
+
+body.dark-mode .search-box:focus-within {
+  background: #4e4e52;
+}
+
+body.dark-mode .search-box input {
+  color: #e0e0e0;
+}
+
+body.dark-mode .search-box input::placeholder {
+  color: #888;
+}
+
+body.dark-mode .search-box svg {
+  color: #888;
+}
+
+body.dark-mode .search-clear:hover {
+  background: #4e4e52;
+}
+
+body.dark-mode .search-progress-container {
+  background: #2d2d30;
+  border-bottom-color: #3e3e42;
+}
+
+body.dark-mode .search-progress-bar {
+  background: #3e3e42;
+}
+
+body.dark-mode .search-progress-text {
+  color: #b0b0b0;
+}
+
+/* 消息区域深色模式 */
+body.dark-mode .messages-container {
+  background: #1e1e1e;
+}
+
+body.dark-mode .messages-header {
+  background: #2d2d30;
+  border-bottom-color: #3e3e42;
+}
+
+body.dark-mode .messages-header h3 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .sort-btn {
+  background: #3e3e42;
+  border-color: #4e4e52;
+  color: #b0b0b0;
+}
+
+body.dark-mode .sort-btn:hover {
+  background: #4e4e52;
+  border-color: #5e5e62;
+}
+
+body.dark-mode .message-item {
+  background: #2d2d30;
+}
+
+body.dark-mode .message-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .message-sender {
+  color: #e0e0e0;
+}
+
+body.dark-mode .message-time {
+  color: #888;
+}
+
+body.dark-mode .message-text {
+  color: #b0b0b0;
+}
+
+body.dark-mode .empty-state {
+  color: #888;
+}
+
+body.dark-mode .empty-state p {
+  color: #b0b0b0;
+}
+
+body.dark-mode .empty-state span {
+  color: #888;
+}
+
+/* 模态框深色模式 */
+body.dark-mode .modal-content {
+  background: #2d2d30;
+}
+
+body.dark-mode .modal-title {
+  color: #e0e0e0;
+}
+
+body.dark-mode .modal-message {
+  color: #b0b0b0;
+}
+
+body.dark-mode .modal-btn.secondary {
+  background: #3e3e42;
+  color: #b0b0b0;
+}
+
+body.dark-mode .modal-btn.secondary:hover {
+  background: #4e4e52;
+}
+
+/* 滚动条深色模式 */
+body.dark-mode .messages-list::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+body.dark-mode .messages-list::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* 全局加载遮罩 */
+.global-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.global-loading-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* 全局加载遮罩深色模式 */
+body.dark-mode .global-loading-overlay {
+  background: rgba(30, 30, 30, 0.8);
+}
+
+body.dark-mode .loading-spinner {
+  border-color: #4e4e52;
+  border-top-color: #8b9dc3;
+}
+
+body.dark-mode .loading-text {
+  color: #b0b0b0;
+}
