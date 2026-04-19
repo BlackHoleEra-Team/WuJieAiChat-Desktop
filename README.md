@@ -1,4 +1,4 @@
-# 无界AI聊天桌面版
+# 无界桌面版
 
 [![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)](https://github.com/BlackHoleEra-Team/WuJieAiChat-Desktop/releases)
@@ -9,7 +9,7 @@
 
 ## 项目简介
 
-无界AI聊天桌面版是一款支持多 AI 服务（Kimi、DeepSeek、阿里云百炼等）的跨平台聊天应用。使用 Electron 框架构建，提供原生桌面应用体验。
+无界桌面版是一款支持多 AI 服务（Kimi、DeepSeek、阿里云百炼等）的跨平台聊天应用。使用 Electron 框架构建，提供原生桌面应用体验。
 
 ## 功能特性
 

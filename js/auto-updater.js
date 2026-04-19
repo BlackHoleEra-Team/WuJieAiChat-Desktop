@@ -60,8 +60,8 @@ let currentUpdateSource = 'github'
 const UPDATE_CONFIG = {
   // 检查更新间隔（毫秒）- 默认24小时
   checkInterval: 24 * 60 * 60 * 1000,
-  // 当前版本
-  currentVersion: require('../package.json').version
+  // 当前版本（从主进程获取）
+  currentVersion: '1.0.0'
 }
 
 // 更新状态
@@ -238,13 +238,13 @@ async function fetchLatestYml() {
     }
   } else {
     // 默认文件名
-    downloadUrl = `${sourceConfig.downloadBaseUrl}v${version}/无界AI聊天.Setup.${version}.exe`
+    downloadUrl = `${sourceConfig.downloadBaseUrl}v${version}/WuJie-Setup-v${version}.exe`
   }
 
   return {
     version: version,
     versionCode: parseInt(version.replace(/[^0-9]/g, '')) || 1,
-    title: `无界AI聊天 v${version}`,
+    title: `无界 v${version}`,
     description: data.releaseNotes || data.notes || '新版本发布',
     releaseDate: data.releaseDate || new Date().toISOString().split('T')[0],
     downloadUrl: downloadUrl,
@@ -260,7 +260,7 @@ async function fetchLatestYml() {
  * 检查更新
  * @param {boolean} showNoUpdatePrompt - 是否显示"已是最新"提示
  */
-async function checkForUpdates(showNoUpdatePrompt = true) {
+const checkForUpdates = async function(showNoUpdatePrompt = true) {
   try {
     console.log('检查更新，当前源:', UPDATE_SOURCES[currentUpdateSource].name)
 

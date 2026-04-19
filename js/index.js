@@ -5,7 +5,7 @@
  * Unauthorized copying, distribution, or use of this software is strictly prohibited.
  */
 
-const { ipcRenderer } = require('electron')
+var { ipcRenderer } = require('electron')
 
 // 引入 jQuery、Cropper.js 和加密库
 const $ = require('jquery')

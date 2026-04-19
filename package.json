@@ -1,7 +1,7 @@
 {
   "name": "wujieaichat-desktop",
   "version": "1.0.0",
-  "description": "无界AI聊天的桌面版应用",
+  "description": "无界的桌面版应用",
   "license": "SEE LICENSE IN LICENSE",
   "author": "BlackHoleEra-Team",
   "type": "commonjs",
@@ -19,7 +19,8 @@
   },
   "build": {
     "appId": "com.wujieaichat.desktop",
-    "productName": "无界AI聊天",
+    "productName": "无界",
+    "artifactName": "WuJie-Setup-v${version}.${ext}",
     "directories": {
       "output": "dist"
     },
@@ -101,8 +102,9 @@
       "installerHeaderIcon": "images/app-icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "无界AI聊天",
-      "include": "build/installer.nsh"
+      "shortcutName": "无界",
+      "include": "build/installer.nsh",
+      "artifactName": "WuJie-Setup-v${version}.${ext}"
     }
   },
   "dependencies": {

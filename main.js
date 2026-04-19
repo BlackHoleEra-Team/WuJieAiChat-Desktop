@@ -124,6 +124,8 @@ const createWindow = () => {
       enableRemoteModule: true,
       webSecurity: true,
       allowRunningInsecureContent: false,
+      // 禁用开发者工具
+      devTools: false,
       // 配置缓存目录
       partition: 'persist:main',
       // 禁用GPU缓存以避免相关错误
@@ -1804,7 +1806,7 @@ let updateFilePath = null
 function downloadUpdateFile(url, version) {
   return new Promise((resolve, reject) => {
     const downloadsPath = app.getPath('downloads')
-    const fileName = `无界AI聊天-Update-v${version}.exe`
+    const fileName = `WuJie-Setup-v${version}.exe`
     const filePath = path.join(downloadsPath, fileName)
 
     // 如果文件已存在，先删除
