@@ -6,6 +6,8 @@
  */
 
 // DeepSeek API调用模块 - 与 OpenAI 兼容的 API 格式
+// 支持新模型：deepseek-v4-flash, deepseek-v4-pro
+// 支持深度思考模式开关和强度控制
 class DeepSeekAPI {
   constructor(apiKey) {
     this.apiKey = apiKey
@@ -15,9 +17,11 @@ class DeepSeekAPI {
   // 普通聊天调用
   async chatCompletion(contactConfig, messages, onMessage = null) {
     const {
-      model = 'deepseek-chat',
+      model = 'deepseek-v4-flash',
       systemPrompt = '',
-      isRolePlay = false
+      isRolePlay = false,
+      deepthink = false,
+      reasoningEffort = 'high' // 'high' 或 'max'
     } = contactConfig
 
     // 构建请求体
@@ -25,6 +29,19 @@ class DeepSeekAPI {
       model: model,
       messages: [],
       stream: !isRolePlay // 角色扮演时禁用流式传输
+    }
+
+    // 新模型支持思考模式开关和强度控制
+    // deepseek-v4-flash 和 deepseek-v4-pro 都支持 thinking 参数
+    if (model === 'deepseek-v4-flash' || model === 'deepseek-v4-pro') {
+      requestBody.thinking = {
+        type: deepthink ? 'enabled' : 'disabled'
+      }
+      
+      // 如果开启思考模式，添加思考强度控制
+      if (deepthink) {
+        requestBody.reasoning_effort = reasoningEffort || 'high'
+      }
     }
 
     // 添加系统提示
@@ -97,6 +114,13 @@ class DeepSeekAPI {
               const data = JSON.parse(dataStr)
               if (data.choices && data.choices.length > 0) {
                 const choice = data.choices[0]
+                
+                // 处理思考内容（reasoning_content）
+                if (choice.delta && choice.delta.reasoning_content) {
+                  console.log('收到思考内容:', choice.delta.reasoning_content)
+                }
+                
+                // 处理正常回复内容
                 if (choice.delta && choice.delta.content) {
                   fullContent += choice.delta.content
                   // 实时调用回调函数更新UI
@@ -125,11 +149,12 @@ class DeepSeekAPI {
     }
   }
 
-  // 深度思考调用（deepseek-reasoner）
+  // 深度思考调用（支持所有新模型）
   async chatCompletionWithThinking(contactConfig, messages, onMessage, onThinking, onComplete) {
     const {
-      model = 'deepseek-reasoner',
-      systemPrompt = ''
+      model = 'deepseek-v4-pro',
+      systemPrompt = '',
+      reasoningEffort = 'high' // 'high' 或 'max'
     } = contactConfig
 
     // 判断是否使用流式传输
@@ -140,6 +165,14 @@ class DeepSeekAPI {
       model: model,
       messages: [],
       stream: isStreaming
+    }
+
+    // 新模型支持思考模式
+    if (model === 'deepseek-v4-flash' || model === 'deepseek-v4-pro') {
+      requestBody.thinking = {
+        type: 'enabled'
+      }
+      requestBody.reasoning_effort = reasoningEffort || 'high'
     }
 
     // 添加系统提示
@@ -200,7 +233,7 @@ class DeepSeekAPI {
                 if (data.choices && data.choices.length > 0) {
                   const choice = data.choices[0]
                   
-                  // DeepSeek reasoner 的思考内容在 reasoning_content 字段
+                  // DeepSeek 的思考内容在 reasoning_content 字段
                   if (choice.delta && choice.delta.reasoning_content) {
                     console.log('收到深度思考内容:', choice.delta.reasoning_content)
                     if (onThinking) onThinking(choice.delta.reasoning_content)
